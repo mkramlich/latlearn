@@ -15,7 +15,7 @@ it was homegrown by its creator to meet that game's early needs for:
 
 It is not intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
 
-More to come! There is more LL-related code to extract from Slartboz (and clean up, of course), And there's an in-house list of ideas for further enhancement.
+More to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's an in-house list of ideas for further enhancement.
 
 For more info on Slartboz (a new sci-fi, post-apoc, real-time Rogue-like, in Golang):
     https://github.com/mkramlich/slartboz-pub
