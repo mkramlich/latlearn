@@ -15,6 +15,7 @@ import (
     "log"
     "os"
     "sort"
+    "strings"
     "time"
 )
 
@@ -182,12 +183,52 @@ func to_file(              f *os.File, txt string) {
     _, _ = io.WriteString( f,          txt + "\n") // TODO error handling
 }
 
+func reverse_string_array( in []string) (out []string) {
+    // NOTE: compiler refuses to let one use: sort.Reverse( in)
+    // TODO  I should not need to write my own fn to do this
+
+    out     = []string {}
+    for i  := (len( in) - 1); i >= 0; i-- {
+        out = append( out, in[i])
+    }
+    return out
+}
+
+func number_grouped( val int64, sep string) string { // sep value like "," or " "
+    // for the "digit grouping" formatted print of a number
+    // example of results:
+    //      12 (with any sep)    to        "12"
+    //    1234 (with sep of ",") to     "1,234"
+    // 1222333 (with sep of " ") to "1 222 333"
+
+    s      := fmt.Sprintf(   "%d", val)
+    s_pcs  := strings.Split( s,    "")
+
+    // reverse it
+    s_pcs2 := reverse_string_array( s_pcs)
+
+    // add comma delim, every 3 digits, to group them for easier human reading:
+    s2         := ""
+    for i, pc  := range s_pcs2 {
+        if (i  != 0) && ((i % 3) == 0) {
+            s2 += sep
+        }
+        s2     += pc
+    }
+
+    s_pcs3 := strings.Split(        s2,     "")
+    s_pcs4 := reverse_string_array( s_pcs3)
+    s3     := strings.Join(         s_pcs4, "")
+
+    return s3
+}
+
 func (ll *LatencyLearner) report( f *os.File) {
-    lat_rec := "?????????"
-    txt2    := "????????? ns AVG   w0     (timefrac ????????"
+    lat_rec := "???,???,???"
+    txt2    := "???,???,??? ns AVG   w0       (timefrac ????????"
 
     if ll.pair_ever_completed {
-        lat_rec         = fmt.Sprintf( "%9d", ll.latency_recent)
+        lat_rec         = fmt.Sprintf( "%11s", number_grouped( int64( ll.latency_recent), ","))
         weight         := ll.weight_of_cumul_latency
         if weight       > 0 {
             cum_ns     := ll.cumul_latency.Nanoseconds() // int64. ns
@@ -195,13 +236,12 @@ func (ll *LatencyLearner) report( f *os.File) {
             t2         := time.Now()         // time.Time
             since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
             my_frac    := float64( cum_ns) / float64( since_init) // float64. fraction
-
-            txt2        = fmt.Sprintf( "%9d ns AVG   w%-5d (timefrac %8f)",
-                                       avg_lat, weight, my_frac)
+            txt2        = fmt.Sprintf( "%11s ns AVG   w%-7d (timefrac %8f)",
+                              number_grouped( int64( avg_lat), ","), weight, my_frac)
         }
     }
 
-    txt1               := fmt.Sprintf( "%9s ns LAST %s",
+    txt1               := fmt.Sprintf( "%11s ns LAST %s",
                                        lat_rec, ll.name)
 
     to_file( f, txt1)
@@ -228,14 +268,14 @@ func latency_report_gen( params []string) {
         txt          := ""
         if        i  == 0 {
             txt       = param
-        } else if is_int_equal_to_any_of( i, []int {9, 18}) { // TODO do this right
+        } else if is_int_equal_to_any_of( i, []int {4,8,12,16,20}) { // TODO do right
               txt     = "\n" + param
         } else if i > 0 {
               txt     = ", " + param
         }
         _, _        = io.WriteString( f, txt)
     }
-    _, _            = io.WriteString( f, "\n")
+    _, _            = io.WriteString( f, "\n\n")
 
     // write (to the file) a report entry for each span:
     for _, span := range tracked_spans {
