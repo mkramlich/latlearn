@@ -13,8 +13,11 @@ it was homegrown by its creator to meet that game's early needs for:
     * benchmark regression tests (for basic QA automation & CI/CD pipelines)
     * engine performance tuning & optimization refactors
 
-It is not intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
+To help understand what latlearn can do, there is a screenshot included of a metrics dashboard window. One run from a terminal, and based on a 'watch' of a report file. This file is generated only when an app calls the fn in this module named latency_report_gen. The screenshot is:
+    report-watch-screenshot.png
 
+It is not intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
+n
 More to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's an in-house list of ideas for further enhancement.
 
 For more info on Slartboz (a new sci-fi, post-apoc, real-time Rogue-like, in Golang):

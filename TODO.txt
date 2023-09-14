@@ -1,7 +1,8 @@
 TODO
 
-extract more LL code from Slartboz (SB)
-    de-SB-ify it
-    genericize it
+prioritize/scrub the Slartboz LL TODOs. move some into here
 
-migrate the SB LL TODOs into here
+example app code that uses it
+
+tests
+
