@@ -30,11 +30,11 @@ type LatencyLearner struct { // assumes only single-thread/one-goroutine-at-a-ti
 }
 
 // tracked_spans built/modified ONLY by latlearn_init. stable sort order wise for report
-var   tracked_spans           []string
-const latlearn_report_fpath = "logs/latency.txt"
-var   latency_learners        map[string]*LatencyLearner
-var   init_time               time.Time
-var init_completed          bool = false// we rely on this defaulting to false
+var tracked_spans           []string
+var latlearn_report_fpath   string = "latency-report.txt"
+var latency_learners        map[string]*LatencyLearner
+var init_time               time.Time
+var init_completed          bool = false // to be explicit. we assume this starts false
 
 func latlearn_init( spans_app []string) {
     pre :=      "latlearn_init"
@@ -268,7 +268,7 @@ func latency_report_gen( params []string) {
         txt          := ""
         if        i  == 0 {
             txt       = param
-        } else if is_int_equal_to_any_of( i, []int {4,8,12,16,20}) { // TODO do right
+        } else if ((i != 0) && ((i % 4) == 0)) { // TODO do this better
               txt     = "\n" + param
         } else if i > 0 {
               txt     = ", " + param
