@@ -29,15 +29,28 @@ type LatencyLearner struct { // assumes only single-thread/one-goroutine-at-a-ti
     pair_ever_completed      bool
 }
 
-// tracked_spans built/modified ONLY by latlearn_init. stable sort order wise for report
+// tracked_spans built/modified ONLY by the latlearn_init and llB fns
+// it keeps a stable order of keys, for a better UX of the report
 var tracked_spans           []string
-var latlearn_report_fpath   string = "latency-report.txt"
+var latlearn_report_fpath   string = "latlearn-report.txt"
 var latency_learners        map[string]*LatencyLearner
 var init_time               time.Time
 var init_completed          bool = false // to be explicit. we assume this starts false
 
-func latlearn_init( spans_app []string) {
-    pre :=      "latlearn_init"
+
+// for latlearn's internal use only
+func latency_learner( span string) (ll *LatencyLearner, found bool) {
+    ll, found = latency_learners[ span]
+    if !found {
+        ll                      = new( LatencyLearner)
+        ll.name                 = span
+        latency_learners[ span] = ll
+    }
+    return ll, found
+}
+
+func latlearn_init2( spans_app []string) {
+    pre :=      "latlearn_init2"
     log.Printf( "%s\n", pre)
 
     latency_learners = make( map[string]*LatencyLearner)
@@ -61,16 +74,18 @@ func latlearn_init( spans_app []string) {
     log.Printf( "%s: spans: %#v\n", pre, spans)
 
     for _, span := range spans {
-        ll                     := new( LatencyLearner)
-        ll.name                 = span
-        latency_learners[ span] = ll
+        latency_learner( span)
     }
 
     tracked_spans  = spans
     init_time      = time.Now()
     init_completed = true
 
-    log.Printf( "%s: END\n", pre)
+    //log.Printf( "%s: END\n", pre)
+}
+
+func latlearn_init() {
+     latlearn_init2( []string {})
 }
 
 func (ll *LatencyLearner) before() {
@@ -82,17 +97,21 @@ func (ll *LatencyLearner) before() {
 }
 
 func (ll *LatencyLearner) B() {
-    // since call wrapped with another call, overhead latency impact a tiny bit higher. but gives a smaller code-on-screen footprint at point-of-instrumentation, for dev to parse
-    // tradeoffs, haha
+    // trade-off: since call wrapped with another call, overhead latency impact a tiny bit higher. but gives a smaller code-on-screen footprint at point-of-instrumentation, for dev to parse
     ll.before()
 }
 
 func llB( name string) *LatencyLearner {
     //log.Printf( "llB: name %s\n", name)
 
-    if !init_completed { return nil}
+    if !init_completed { // allows lazy init of latlearn, upon first call to llB
+        latlearn_init()
+    }
 
-    ll := latency_learners[ name]
+    ll, found := latency_learner( name)
+    if !found { // if was an ad hoc span? meaning this span was NOT already tracked
+        tracked_spans = append( tracked_spans, name) // we assume here that tracked_spans will stay in sych with the set of keys in latency_learners. except tracked_spans adds extra notion of preserving a stable order to the keys (relied on in the report)
+    }
     ll.before()
     return ll
 }
@@ -143,11 +162,10 @@ func latency_measure_self_sample() {
     ll_noop.after() // NOTE: we dont call A() so dont unbounded-recurse back into this fn
 }
 
-func latency_measure_of_various_benchmark_tasks() {
+func latlearn_benchmarks() {
     if !init_completed { return}
 
-    pre   := "latlearn.latency_measure_of_various_benchmark_tasks"
-
+    pre   :=      "latlearn_benchmarks"
     ll_bt := llB( "LL.benchmarks-total")
 
     strs  := []string { "Zelda", "Hoth", "Abro",  "Daneel", "Tempest", "Cthulhu", "Bonk", "Arky","Ys", "Jude Law"}
@@ -179,10 +197,12 @@ func (ll *LatencyLearner) avg_latency() ( avg_latency int64, weight int) {
     return avg_latency, weight
 }
 
+// for latlearn's internal use only
 func to_file(              f *os.File, txt string) {
     _, _ = io.WriteString( f,          txt + "\n") // TODO error handling
 }
 
+// for latlearn's internal use only
 func reverse_string_array( in []string) (out []string) {
     // NOTE: compiler refuses to let one use: sort.Reverse( in)
     // TODO  I should not need to write my own fn to do this
@@ -194,6 +214,7 @@ func reverse_string_array( in []string) (out []string) {
     return out
 }
 
+// for latlearn's internal use only
 func number_grouped( val int64, sep string) string { // sep value like "," or " "
     // for the "digit grouping" formatted print of a number
     // example of results:
@@ -250,26 +271,27 @@ func (ll *LatencyLearner) report( f *os.File) {
     to_file( f, txt2)
 }
 
-func latency_report_gen2( params []string) {
+func latlearn_report2( params []string) {
     if !init_completed { return}
+    pre := "latlearn_report2"
 
     ll      := llB( "LL.lat-report")
 
     f, err  := os.Create( latlearn_report_fpath)
     if err  != nil {
-        msg := fmt.Sprintf( "latlearn.latency_report_gen could not create file for report: path '%s', err %#v", latlearn_report_fpath, err)
+        msg := fmt.Sprintf( "latlearn/%s could not create file for report: path '%s', err %#v", pre, latlearn_report_fpath, err)
         log.Printf( "%s\n", msg)
         panic( msg)
     }
     defer f.Close()
 
-    _, _ = io.WriteString( f, "Latency Report (https://github.com/mkramlich/latlearn)\n")
+    io.WriteString( f, "Latency Report (https://github.com/mkramlich/latlearn)\n")
 
     t2         := time.Now()         // time.Time
     since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
     si_txt     := number_grouped( int64( since_init), ",")
     time_param := fmt.Sprintf( "since LL init: %s ns\n", si_txt)
-    _, _        = io.WriteString( f, time_param)
+    io.WriteString( f, time_param)
 
     // Context Params (which may impact interpretation of the reported span metrics)
     for i, param     := range params {
@@ -281,9 +303,12 @@ func latency_report_gen2( params []string) {
         } else if i > 0 {
               txt     = ", " + param
         }
-        _, _        = io.WriteString( f, txt)
+        io.WriteString( f, txt)
     }
-    _, _            = io.WriteString( f, "\n\n")
+    if len( params) > 0 {
+        io.WriteString( f, "\n")
+    }
+    io.WriteString(     f, "\n")
 
     // write (to the file) a report entry for each span:
     for _, span := range tracked_spans {
@@ -293,7 +318,7 @@ func latency_report_gen2( params []string) {
     ll.A()
 }
 
-func latency_report_gen() {
-     latency_report_gen2( []string {})
+func latlearn_report() {
+     latlearn_report2( []string {})
 }
 

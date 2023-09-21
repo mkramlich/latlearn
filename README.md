@@ -5,15 +5,16 @@ https://github.com/mkramlich/latlearn
 
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
 
-Simple Example:
+Simplest Example:
 ```
-latlearn_init( []string { "foo", "bar"})
 ll := llB( "foo")
 foo()
 ll.A()
-latency_report_gen( []string { "ver=1.2", "commit=whatever", "N=2", "cores=2"})
-// it just wrote a report (on latency stats) into a file at "./latency-report.txt"
+latlearn_report()
+// it just wrote a report (on latency stats) into a file at "./latlearn-report.txt"
 ```
+
+For more complex examples, features and permutations see `./example-app1.go` and use `./buildrun.sh` to run it.
 
 Extracted from slartboz.go on 2023 Sep 10 around 10:30am local time,
 from the private/closed-source Slartboz game's source tree -- where
