@@ -1,8 +1,8 @@
 TODO
 
-prioritize/scrub the Slartboz LL TODOs. move some into here
+lazy init of some/all spans in app (for ad hoc instrum)
 
-example app code that uses it
+prioritize/scrub the Slartboz LL TODOs. move some into here
 
 tests
 

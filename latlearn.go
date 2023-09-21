@@ -225,24 +225,25 @@ func number_grouped( val int64, sep string) string { // sep value like "," or " 
 
 func (ll *LatencyLearner) report( f *os.File) {
     lat_rec := "???,???,???"
-    txt2    := "???,???,??? ns AVG   w0           (timefrac ????????"
+    txt2    := "???,???,??? ns AVG                       w          0 (tf ????????)"
 
     if ll.pair_ever_completed {
         lat_rec         = fmt.Sprintf( "%11s", number_grouped( int64( ll.latency_recent), ","))
-        weight         := ll.weight_of_cumul_latency
-        if weight       > 0 {
-            cum_ns     := ll.cumul_latency.Nanoseconds() // int64. ns
-            avg_lat    := cum_ns / int64( weight)
-            weight_txt := number_grouped( int64( weight), ",")
-            t2         := time.Now()         // time.Time
-            since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
-            my_frac    := float64( cum_ns) / float64( since_init) // float64. fraction
-            txt2        = fmt.Sprintf( "%11s ns AVG   w%11s (timefrac %8f)",
-                              number_grouped( int64( avg_lat), ","), weight_txt, my_frac)
+        weight          := ll.weight_of_cumul_latency
+        if weight        > 0 {
+            cum_ns      := ll.cumul_latency.Nanoseconds() // int64. ns
+            avg_lat     := cum_ns / int64( weight)
+            avg_lat_txt := number_grouped( int64( avg_lat), ",")
+            weight_txt  := number_grouped( int64( weight), ",")
+            t2          := time.Now()         // time.Time
+            since_init  := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
+            my_frac     := float64( cum_ns) / float64( since_init) // float64. fraction
+            txt2         = fmt.Sprintf( "%11s ns AVG  %-20s w%11s (tf %8f)",
+                                        avg_lat_txt, ll.name, weight_txt, my_frac)
         }
     }
 
-    txt1               := fmt.Sprintf( "%11s ns LAST %s",
+    txt1               := fmt.Sprintf( "%11s ns LAST %-20s",
                                        lat_rec, ll.name)
 
     to_file( f, txt1)
@@ -261,6 +262,14 @@ func latency_report_gen2( params []string) {
         panic( msg)
     }
     defer f.Close()
+
+    _, _ = io.WriteString( f, "Latency Report (https://github.com/mkramlich/latlearn)\n")
+
+    t2         := time.Now()         // time.Time
+    since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
+    si_txt     := number_grouped( int64( since_init), ",")
+    time_param := fmt.Sprintf( "since LL init: %s ns\n", si_txt)
+    _, _        = io.WriteString( f, time_param)
 
     // Context Params (which may impact interpretation of the reported span metrics)
     for i, param     := range params {
