@@ -30,10 +30,13 @@ func main() {
 
     fn1()
 
+    // let's print a basic report:
+    latency_report_gen()
+
     // We might want to include some context params in our report. If so, give the report generating function a list of strings. A context parameter might be some fact or metadata that the audience would feel is relevant, especially to make a correct interpretation of the metrics, and a correct deduction about their own next course of action.
 
     params := []string { "ver=1.2", "commit=whatever", "N=2", "cores=2"}
-    latency_report_gen( params)
+    latency_report_gen2( params)
 
     // It just wrote a report (on latency stats) into a file at "./latency-report.txt"
 
@@ -48,7 +51,7 @@ func main() {
     // To change the report's file path, do like:
     latlearn_report_fpath = "latency-report2.txt"
     // There were no changes to any context param. we just want to see the benchmark metrics which should now appear in the report:
-    latency_report_gen( params)
+    latency_report_gen2( params)
 
     // NOTE: All of LL's built-in spans (like for benchmarks) have names starting with "LL."
     // By the way, latlearn also measures the latency of its own report generation. It names that span "LL.lat-report"
@@ -61,7 +64,7 @@ func main() {
     // The below may start to feel a little verbose (boilerplatey) but we express it like this to reinforce that you can continually adjust the report params and file path as you go. which is helpful for testing, and for doing comparisons while doing troubleshooting or tuning work
 
     latlearn_report_fpath = "latency-report3.txt"
-    latency_report_gen( params)
+    latency_report_gen2( params)
 
     // In this report you'll see metrics for fn2 reported for the first time.
     // Note that fn2's AVG latency is (almost certaily) smaller (faster) than fn1. That is because its code body is similar, except it lacks any Printf call. Typically, turning off any output writes (esp to log files) yields a significant reduction in latency (on a typical machine, ayway.) Though in this case fn2 contributes to much more of the program's overall total run latency, measured from process start to end. Because, unlike fn1, it was called 100,234 times.

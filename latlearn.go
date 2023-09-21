@@ -248,20 +248,18 @@ func (ll *LatencyLearner) report( f *os.File) {
     to_file( f, txt2)
 }
 
-func latency_report_gen( params []string) {
+func latency_report_gen2( params []string) {
     if !init_completed { return}
 
-    ll    := llB( "LL.lat-report")
+    ll      := llB( "LL.lat-report")
 
-    var f *os.File
-    lat_stats_file, err := os.Create( latlearn_report_fpath)
+    f, err  := os.Create( latlearn_report_fpath)
     if err  != nil {
         msg := fmt.Sprintf( "latlearn.latency_report_gen could not create file for report: path '%s', err %#v", latlearn_report_fpath, err)
         log.Printf( "%s\n", msg)
         panic( msg)
     }
-    defer lat_stats_file.Close()
-    f =   lat_stats_file
+    defer f.Close()
 
     // Context Params (which may impact interpretation of the reported span metrics)
     for i, param     := range params {
@@ -283,5 +281,9 @@ func latency_report_gen( params []string) {
     }
 
     ll.A()
+}
+
+func latency_report_gen() {
+     latency_report_gen2( []string {})
 }
 
