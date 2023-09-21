@@ -76,4 +76,7 @@ func main() {
     }
     latlearn_report_fpath = "latlearn-report4.txt"
     latlearn_report() // next time you gen any report, that span will be added to end
+
+    latlearn_should_report_builtins = false
+    latlearn_report() // this report will NOT include any of latlearn's built-in spans
 }

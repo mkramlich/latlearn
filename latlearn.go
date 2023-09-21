@@ -33,11 +33,12 @@ type LatencyLearner struct { // assumes only single-thread/one-goroutine-at-a-ti
 
 // tracked_spans built/modified ONLY by the latlearn_init and llB fns
 // it keeps a stable order of keys, for a better UX of the report
-var tracked_spans           []string
-var latlearn_report_fpath   string = "latlearn-report.txt"
-var latency_learners        map[string]*LatencyLearner
-var init_time               time.Time
-var init_completed          bool = false // to be explicit. we assume this starts false
+var tracked_spans                   []string
+var latlearn_report_fpath           string = "latlearn-report.txt"
+var latency_learners                map[string]*LatencyLearner
+var init_time                       time.Time
+var init_completed                  bool = false // explicit. we expect this starts false
+var latlearn_should_report_builtins bool = true
 
 
 // for latlearn's internal use only
@@ -331,11 +332,13 @@ func latlearn_report2( params []string) {
                    "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac")
     to_file( f, header)
     for _, span := range tracked_spans {
+        if !latlearn_should_report_builtins && strings.HasPrefix( span,"LL.") { continue}
         latency_learners[ span].report( f, since_init) // TODO add found-in-map guard
     }
 
     ll.A()
 }
+
 
 func latlearn_report() {
      latlearn_report2( []string {})
