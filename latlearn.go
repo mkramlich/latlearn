@@ -2,7 +2,7 @@
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 September 13
+//     last rev 2023 September 21
 //
 //     contact: groglogic@gmail.com
 //     project: https://github.com/mkramlich/latlearn
@@ -197,14 +197,14 @@ func (ll *LatencyLearner) values() ( string, time.Duration, time.Duration, int, 
     return ll.name, ll.latency_last, ll.cumul_latency, ll.weight_of_cumul_latency, ll.min, ll.max, ll.pair_underway, ll.pair_ever_completed
 }
 
-func (ll *LatencyLearner) avg_latency() ( avg_latency int64, weight int) {
-    avg_latency      = int64( -1)
-    weight           = ll.weight_of_cumul_latency
-    if weight        > 0 {
-        cumul       := ll.cumul_latency.Nanoseconds()
-        avg_latency  = cumul / int64( weight)
+func (ll *LatencyLearner) mean_latency() ( mean_latency int64, weight int) {
+    mean_latency      = int64( -1)
+    weight            = ll.weight_of_cumul_latency
+    if weight         > 0 {
+        cumul        := ll.cumul_latency.Nanoseconds()
+        mean_latency  = cumul / int64( weight)
     }
-    return avg_latency, weight
+    return mean_latency, weight
 }
 
 // for latlearn's internal use only
