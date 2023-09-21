@@ -5,11 +5,11 @@ https://github.com/mkramlich/latlearn
 
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
 
-For each span you instrument it will determine the minimum latency ever observed for it, and the maximum, the mean, and the remember the last value observed as well. It can report all these plus the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn_init was called. All latencies are measured and reported in nanoseconds.
+For each span you instrument it will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
 
 It supports both "expected" spans -- ones mainly where you care about having a stable ordering of them when printed in the report. As well as "ad hoc" spans. You can also choose to do either an "eager init" of latlearn, or a lazy init. A lazy init happens if you call llB() before having previously made an explicit call to init latlearn. In that case, latlearn will init itself (prepare it's internal state as needed) for you, under the hood.
 
-Latlearn also tracks the cost of its own measurements and reporting. And includes a few built-in benchmarked tasks, to help the user quick make apples-to-apples comparisons when trying to interpret the meaning of the numbers they are seeing in their own reports. This also helps when comparing results ran on different machines with possibly wildly different hardware capabilities or external dependencies (network stacks, persistance backends, etc.) All of latlearn's built-in measurements have a "LL." as the prefix of the span name.
+Latlearn also tracks the cost of its own measurements and reporting. And includes a few built-in benchmarked tasks, to help the user quickly make an apples-to-apples comparison, in their mind, when trying to interpret the meaning of the numbers they are seeing in their own latency reports. This also helps when comparing results ran on different machines with possibly wildly different hardware capabilities or external dependencies (network stacks, env conditions, persistance backends, etc.) All of latlearn's built-in measurements have a "LL." as the prefix of the span name.
 
 Simplest Example:
 ```
@@ -48,13 +48,27 @@ The latlearn code is NOT intended to meet everyone's needs. It scratched an itch
 
 There is MUCH more to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's a lost list of in-house ideas for further enhancement.
 
+Consulting
+
+The author specializes in the performance and scalability of software. And has long had a passion for it, going back to his days as a starry-eyed, would-be Physics major back in his college days. He can be available to help out with your system and legacy codebases, ideally as a remote contractor.
+
+Performance upgrades. Troubleshooting. Improving the scalability of your architecture. Identifying and removing bottlenecks. Tuning pass follow-up to your own internal, biz-speciic or feature-oriented efforts. Shrinking latencies can yield a better UX and more happy users. And a higher (better) SEO ranking in the eyes of Google, for example. By shrinking latencies it tends to also boost the total "payload" throughput. And reduce the compute load burden on your servers -- and *that* in turn can reduce your total *billing* spend each month. Spend a little money (on an expert consultant) to SAVE much more money going forward. And the benefits of a performance tuning effort yield even bigger profit boosts (or net savings) the *earlier* they are performed, and the more thorough.
+
+Golang codebases (on Linux or Mac) are ideal, but also can work with C, Python and Java.
+
+Contact the author for a free, initial conversation.
+
+Slartboz
+
 For more info on Slartboz (a new sci-fi, post-apoc, real-time Rogue-like, in Golang):
     https://github.com/mkramlich/slartboz-pub
 
-To contact the author, email him at:
-    groglogic@gmail.com
+Latlearn Contribution Policy
 
 New feature or fix suggestions are welcome! Praise feedback, especially! Or small tips, or blatant bribes. However, note that we are NOT taking any PRs or direct code contributions, at this time.
+
+To contact the author, email him at:
+    groglogic@gmail.com
 
 thanks!
 
