@@ -225,7 +225,7 @@ func number_grouped( val int64, sep string) string { // sep value like "," or " 
 
 func (ll *LatencyLearner) report( f *os.File) {
     lat_rec := "???,???,???"
-    txt2    := "???,???,??? ns AVG   w0       (timefrac ????????"
+    txt2    := "???,???,??? ns AVG   w0           (timefrac ????????"
 
     if ll.pair_ever_completed {
         lat_rec         = fmt.Sprintf( "%11s", number_grouped( int64( ll.latency_recent), ","))
@@ -233,11 +233,12 @@ func (ll *LatencyLearner) report( f *os.File) {
         if weight       > 0 {
             cum_ns     := ll.cumul_latency.Nanoseconds() // int64. ns
             avg_lat    := cum_ns / int64( weight)
+            weight_txt := number_grouped( int64( weight), ",")
             t2         := time.Now()         // time.Time
             since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
             my_frac    := float64( cum_ns) / float64( since_init) // float64. fraction
-            txt2        = fmt.Sprintf( "%11s ns AVG   w%-7d (timefrac %8f)",
-                              number_grouped( int64( avg_lat), ","), weight, my_frac)
+            txt2        = fmt.Sprintf( "%11s ns AVG   w%11s (timefrac %8f)",
+                              number_grouped( int64( avg_lat), ","), weight_txt, my_frac)
         }
     }
 
