@@ -46,7 +46,7 @@ To help understand what latlearn can do, there is a (very simple) sample of a la
 
 The latlearn code is NOT intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
 
-There is MUCH more to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's a lost list of in-house ideas for further enhancement.
+There is MUCH more to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's a long list of in-house ideas for further enhancement.
 
 Consulting
 
