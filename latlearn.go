@@ -22,9 +22,11 @@ import (
 type LatencyLearner struct { // assumes only single-thread/one-goroutine-at-a-time access
     name                     string
     t1                       time.Time     // NOTE there is no (need for a) t2 field
-    latency_recent           time.Duration // int64
+    latency_last             time.Duration // int64
     cumul_latency            time.Duration // int64
     weight_of_cumul_latency  int
+    min                      time.Duration // int64
+    max                      time.Duration // int64
     pair_underway            bool
     pair_ever_completed      bool
 }
@@ -116,7 +118,6 @@ func llB( name string) *LatencyLearner {
     return ll
 }
 
-// TODO opt string arg to indicate was alternate/non-normal path to reach the after point
 func (ll *LatencyLearner) after() {
     //log.Printf("LatencyLearner.after: name %s\n", ll.name)
 
@@ -128,9 +129,17 @@ func (ll *LatencyLearner) after() {
     //log.Printf( "%s after : %#v ms\n",         ll.name, t2)
     //log.Printf( "%s dur   : %#v ns precise\n", ll.name, dur) // nanos. (1/1000 of a milli)
 
-    ll.latency_recent           = dur
+    ll.latency_last             = dur
     ll.cumul_latency           += dur
     ll.weight_of_cumul_latency ++
+
+    if ll.pair_ever_completed {
+        if ( dur < ll.min) {ll.min = dur}
+        if ( dur > ll.max) {ll.max = dur}
+    } else {
+        ll.min = dur
+        ll.max = dur
+    }
 
     ll.pair_underway            = false
     ll.pair_ever_completed      = true
@@ -183,8 +192,8 @@ func latlearn_benchmarks() {
     ll_bt.A()
 }
 
-func (ll *LatencyLearner) values() ( string, time.Duration, time.Duration, int, bool, bool) {
-    return ll.name, ll.latency_recent, ll.cumul_latency, ll.weight_of_cumul_latency, ll.pair_underway, ll.pair_ever_completed
+func (ll *LatencyLearner) values() ( string, time.Duration, time.Duration, int, time.Duration, time.Duration, bool, bool) {
+    return ll.name, ll.latency_last, ll.cumul_latency, ll.weight_of_cumul_latency, ll.min, ll.max, ll.pair_underway, ll.pair_ever_completed
 }
 
 func (ll *LatencyLearner) avg_latency() ( avg_latency int64, weight int) {
@@ -244,31 +253,37 @@ func number_grouped( val int64, sep string) string { // sep value like "," or " 
     return s3
 }
 
-func (ll *LatencyLearner) report( f *os.File) {
-    lat_rec := "???,???,???"
-    txt2    := "???,???,??? ns AVG                       w          0 (tf ????????)"
+func (ll *LatencyLearner) report( f *os.File, since_init time.Duration /*int64. ns*/) {
+
+    line    := ""
 
     if ll.pair_ever_completed {
-        lat_rec         = fmt.Sprintf( "%11s", number_grouped( int64( ll.latency_recent), ","))
-        weight          := ll.weight_of_cumul_latency
-        if weight        > 0 {
-            cum_ns      := ll.cumul_latency.Nanoseconds() // int64. ns
-            avg_lat     := cum_ns / int64( weight)
-            avg_lat_txt := number_grouped( int64( avg_lat), ",")
-            weight_txt  := number_grouped( int64( weight), ",")
-            t2          := time.Now()         // time.Time
-            since_init  := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
-            my_frac     := float64( cum_ns) / float64( since_init) // float64. fraction
-            txt2         = fmt.Sprintf( "%11s ns AVG  %-20s w%11s (tf %8f)",
-                                        avg_lat_txt, ll.name, weight_txt, my_frac)
+        lat_min_txt      := fmt.Sprintf( "%15s", number_grouped( int64( ll.min), ","))
+        lat_last_txt     := fmt.Sprintf( "%15s", number_grouped( int64( ll.latency_last), ","))
+        lat_max_txt      := fmt.Sprintf( "%15s", number_grouped( int64( ll.max), ","))
+        lat_mean_txt     := "???,???,???,???"
+        weight_txt       := "???,???,???"
+        tf_txt           := "????????"
+        weight           := ll.weight_of_cumul_latency
+        if weight         > 0 {
+            cum_ns       := ll.cumul_latency.Nanoseconds() // int64. ns
+            lat_mean     := cum_ns / int64( weight)
+            lat_mean_txt  = number_grouped( int64( lat_mean), ",")
+            weight_txt    = number_grouped( int64( weight),   ",")
+            my_frac      := float64( cum_ns) / float64( since_init) // float64. fraction
+            tf_txt        = fmt.Sprintf( "%8f", my_frac)
         }
+        line = fmt.Sprintf(
+                   "%-20s: %15s | %15s | %15s | %15s | w %11s | tf %8s",
+                   ll.name, lat_min_txt, lat_last_txt, lat_max_txt, lat_mean_txt, weight_txt, tf_txt)
+    } else {
+        // min, last, max, mean, weight of mean (# of calls for this span), time fraction (of current time difference since latlearn_init, in/under this span)
+        line = fmt.Sprintf(
+                   "%-20s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ????????",
+                   ll.name)
     }
 
-    txt1               := fmt.Sprintf( "%11s ns LAST %-20s",
-                                       lat_rec, ll.name)
-
-    to_file( f, txt1)
-    to_file( f, txt2)
+    to_file( f, line)
 }
 
 func latlearn_report2( params []string) {
@@ -310,9 +325,13 @@ func latlearn_report2( params []string) {
     }
     io.WriteString(     f, "\n")
 
-    // write (to the file) a report entry for each span:
+    // write a report entry (to the file) for the latency stats on each tracked span:
+    header  := fmt.Sprintf(
+                   "%-20s: %15s | %15s | %15s | %15s | %13s | %11s",
+                   "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac")
+    to_file( f, header)
     for _, span := range tracked_spans {
-        latency_learners[ span].report( f)
+        latency_learners[ span].report( f, since_init) // TODO add found-in-map guard
     }
 
     ll.A()

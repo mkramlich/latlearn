@@ -1,8 +1,0 @@
-TODO
-
-lazy init of some/all spans in app (for ad hoc instrum)
-
-prioritize/scrub the Slartboz LL TODOs. move some into here
-
-tests
-

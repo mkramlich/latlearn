@@ -1,20 +1,13 @@
 Latency Report (https://github.com/mkramlich/latlearn)
-since LL init: 886,203 ns
-ver=1.2, commit=whatever, N=2, cores=2
+since LL init: 41,315,221 ns
 
-      5,791 ns LAST print-yo            
-      5,791 ns AVG  print-yo             w          1 (tf 0.006314)
-      1,835 ns LAST fn1                 
-      1,835 ns AVG  fn1                  w          1 (tf 0.001975)
-???,???,??? ns LAST fn2                 
-???,???,??? ns AVG                       w          0 (tf ????????)
-         86 ns LAST LL.no-op            
-         94 ns AVG  LL.no-op             w          3 (tf 0.000300)
-???,???,??? ns LAST LL.sort-10-strs     
-???,???,??? ns AVG                       w          0 (tf ????????)
-???,???,??? ns LAST LL.log-10-hellos    
-???,???,??? ns AVG                       w          0 (tf ????????)
-???,???,??? ns LAST LL.benchmarks-total 
-???,???,??? ns AVG                       w          0 (tf ????????)
-    226,981 ns LAST LL.lat-report       
-    226,981 ns AVG  LL.lat-report        w          1 (tf 0.233016)
+span                :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac
+print-yo            :           2,593 |           2,593 |           2,593 |           2,593 | w           1 | tf 0.000063
+fn1                 :           2,706 |           2,706 |           2,706 |           2,706 | w           1 | tf 0.000065
+fn2                 :              78 |             121 |          32,521 |              88 | w     100,234 | tf 0.214262
+LL.no-op            :              76 |             151 |          38,994 |              86 | w     100,245 | tf 0.209477
+LL.sort-10-strs     :           6,352 |           6,352 |           6,352 |           6,352 | w           1 | tf 0.000154
+LL.log-10-hellos    :          32,594 |          32,594 |          32,594 |          32,594 | w           1 | tf 0.000789
+LL.benchmarks-total :          97,226 |          97,226 |          97,226 |          97,226 | w           1 | tf 0.002353
+LL.lat-report       :         267,375 |         655,340 |         655,340 |         424,990 | w           4 | tf 0.041146
+totally-adhoc       :             142 |             142 |             150 |             146 | w           2 | tf 0.000007
