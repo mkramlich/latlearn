@@ -380,7 +380,14 @@ func latlearn_report2( params []string) {
     io.WriteString( f, fmt.Sprintf( "GOARCH:     %s\n", runtime.GOARCH))
     io.WriteString( f, fmt.Sprintf( "GOOS:       %s\n", runtime.GOOS))
     io.WriteString( f, fmt.Sprintf( "NumCPU:     %d\n", runtime.NumCPU()))
-    io.WriteString( f, fmt.Sprintf( "GOMAXPROCS: %d\n\n", runtime.GOMAXPROCS( -1)))
+    io.WriteString( f, fmt.Sprintf( "GOMAXPROCS: %d\n", runtime.GOMAXPROCS( -1)))
+
+    term_rows  := "?"
+    term_cols  := "?"
+    if val, ok := os.LookupEnv(     "LINES");   ok {   term_rows = val}
+    if val, ok := os.LookupEnv(     "COLUMNS"); ok {   term_cols = val}
+    io.WriteString( f, fmt.Sprintf( "LINES:      %s\n",   term_rows))
+    io.WriteString( f, fmt.Sprintf( "COLUMNS:    %s\n\n", term_cols))
 
     // Context Params (which may impact interpretation of the reported span metrics)
     for i, param     := range params {
