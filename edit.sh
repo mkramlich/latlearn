@@ -1,3 +1,3 @@
 #!/bin/sh
 
-vi README.txt TODO.txt latlearn.go copy-from-slartboz.sh copy-to-slartboz.sh
+vi ../Slartboz/priv/notes/TODO-latlearn.txt ./README.md latlearn.go example-app1.go buildrun.sh 
