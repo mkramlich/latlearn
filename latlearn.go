@@ -384,10 +384,20 @@ func latlearn_report2( params []string) {
 
     term_rows  := "?"
     term_cols  := "?"
-    if val, ok := os.LookupEnv(     "LINES");   ok {   term_rows = val}
-    if val, ok := os.LookupEnv(     "COLUMNS"); ok {   term_cols = val}
+    if val, ok := os.LookupEnv(     "LINES");   ok {      term_rows = val}
+    if val, ok := os.LookupEnv(     "COLUMNS"); ok {      term_cols = val}
     io.WriteString( f, fmt.Sprintf( "LINES:      %s\n",   term_rows))
-    io.WriteString( f, fmt.Sprintf( "COLUMNS:    %s\n\n", term_cols))
+    io.WriteString( f, fmt.Sprintf( "COLUMNS:    %s\n", term_cols))
+
+    host       := ""
+    if val, ok := os.LookupEnv(     "HOST"); ok {         host = val}
+    io.WriteString( f, fmt.Sprintf( "HOST:       %s\n",   host))
+
+    term       := ""
+    if val, ok := os.LookupEnv(     "TERM"); ok {         term = val}
+    io.WriteString( f, fmt.Sprintf( "TERM:       %s\n",   term))
+
+    io.WriteString( f, "\n")
 
     // Context Params (which may impact interpretation of the reported span metrics)
     for i, param     := range params {

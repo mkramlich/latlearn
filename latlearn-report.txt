@@ -2,7 +2,7 @@ Latency Report (https://github.com/mkramlich/latlearn)
 
 latlearn_should_subtract_overhead: true
 metric treated as overhead: LL.no-op, min
-since LL init: 44,907,117 ns
+since LL init: 44,043,957 ns
 
 Go ver:     go1.20.4
 GOARCH:     amd64
@@ -11,18 +11,20 @@ NumCPU:     4
 GOMAXPROCS: 4
 LINES:      ?
 COLUMNS:    ?
+HOST:       
+TERM:       xterm-256color
 
 
 span                 :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac
-print-yo             :           1,869 |           1,869 |           1,869 |           1,869 | w           1 | tf 0.000043
-fn1                  :           2,008 |           2,008 |           2,008 |           2,008 | w           1 | tf 0.000046
-fn2                  :               3 |              11 |         306,124 |              15 | w     100,234 | tf 0.201722
-LL.no-op             :              75 |              63 |          78,192 |              11 | w     104,246 | tf 0.200067
-LL.span-map-lookup   :              13 |              18 |           5,696 |              27 | w       1,000 | tf 0.002276
-LL.add-2-int-literals:               3 |               9 |           8,941 |              26 | w       1,000 | tf 0.002251
-LL.add-2-str-literals:               3 |              13 |             894 |              14 | w       1,000 | tf 0.001992
-LL.sort-10-strs      :             302 |             328 |           6,408 |             359 | w       1,000 | tf 0.009669
-LL.log-10-hellos     :          30,505 |          30,505 |          30,505 |          30,505 | w           1 | tf 0.000681
-LL.benchmarks-total  :       2,494,106 |       2,494,106 |       2,494,106 |       2,494,106 | w           1 | tf 0.055541
-LL.lat-report        :         143,316 |         143,316 |         551,616 |         341,151 | w           6 | tf 0.045591
-totally-adhoc        :               9 |               9 |              31 |              20 | w           2 | tf 0.000004
+print-yo             :           2,096 |           2,096 |           2,096 |           2,096 | w           1 | tf 0.000049
+fn1                  :           1,664 |           1,664 |           1,664 |           1,664 | w           1 | tf 0.000039
+fn2                  :               3 |              10 |          20,059 |              13 | w     100,234 | tf 0.201137
+LL.no-op             :              75 |              57 |          14,062 |              10 | w     104,246 | tf 0.201496
+LL.span-map-lookup   :              12 |              13 |             199 |              16 | w       1,000 | tf 0.002081
+LL.add-2-int-literals:               3 |               6 |             191 |              11 | w       1,000 | tf 0.001969
+LL.add-2-str-literals:               3 |               3 |             659 |              14 | w       1,000 | tf 0.002043
+LL.sort-10-strs      :             301 |             310 |           8,141 |             354 | w       1,000 | tf 0.009754
+LL.log-10-hellos     :          27,411 |          27,411 |          27,411 |          27,411 | w           1 | tf 0.000624
+LL.benchmarks-total  :       2,449,356 |       2,449,356 |       2,449,356 |       2,449,356 | w           1 | tf 0.055613
+LL.lat-report        :         157,916 |         157,916 |         373,411 |         302,170 | w           6 | tf 0.041174
+totally-adhoc        :              33 |              33 |              37 |              35 | w           2 | tf 0.000005
