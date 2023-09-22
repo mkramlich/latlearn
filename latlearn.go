@@ -14,6 +14,7 @@ import (
     "io"
     "log"
     "os"
+    "runtime"
     "sort"
     "strings"
     "time"
@@ -346,6 +347,11 @@ func latlearn_report2( params []string) {
     si_txt     := number_grouped( int64( since_init), ",")
     time_param := fmt.Sprintf( "since LL init: %s ns\n\n", si_txt)
     io.WriteString( f, time_param)
+
+    io.WriteString( f, fmt.Sprintf( "GOARCH:     %s\n", runtime.GOARCH))
+    io.WriteString( f, fmt.Sprintf( "GOOS:       %s\n", runtime.GOOS))
+    io.WriteString( f, fmt.Sprintf( "NumCPU:     %d\n", runtime.NumCPU()))
+    io.WriteString( f, fmt.Sprintf( "GOMAXPROCS: %d\n\n", runtime.GOMAXPROCS( -1)))
 
     // Context Params (which may impact interpretation of the reported span metrics)
     for i, param     := range params {
