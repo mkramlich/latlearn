@@ -2,8 +2,9 @@ Latency Report (https://github.com/mkramlich/latlearn)
 
 latlearn_should_subtract_overhead: true
 metric treated as overhead: LL.no-op, min
-since LL init: 45,837,673 ns
+since LL init: 39,947,677 ns
 
+Go ver:     go1.20.4
 GOARCH:     amd64
 GOOS:       darwin
 NumCPU:     4
@@ -11,12 +12,12 @@ GOMAXPROCS: 4
 
 
 span                :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac
-print-yo            :           2,073 |           2,073 |           2,073 |           2,073 | w           1 | tf 0.000047
-fn1                 :           1,597 |           1,597 |           1,597 |           1,597 | w           1 | tf 0.000037
-fn2                 :               2 |               8 |          91,016 |              17 | w     100,234 | tf 0.209206
-LL.no-op            :              78 |              12 |         249,582 |              17 | w     100,247 | tf 0.209148
-LL.sort-10-strs     :           5,110 |           5,110 |           5,110 |           5,110 | w           1 | tf 0.000113
-LL.log-10-hellos    :          26,714 |          26,714 |          26,714 |          26,714 | w           1 | tf 0.000584
-LL.benchmarks-total :          38,821 |          38,821 |          38,821 |          38,821 | w           1 | tf 0.000849
-LL.lat-report       :         232,160 |         474,645 |       1,190,119 |         518,086 | w           6 | tf 0.067826
-totally-adhoc       :              26 |              26 |              34 |              30 | w           2 | tf 0.000005
+print-yo            :           1,771 |           1,771 |           1,771 |           1,771 | w           1 | tf 0.000046
+fn1                 :           1,801 |           1,801 |           1,801 |           1,801 | w           1 | tf 0.000047
+fn2                 :               2 |              12 |          35,691 |              11 | w     100,234 | tf 0.220343
+LL.no-op            :              76 |              26 |          28,871 |               8 | w     100,247 | tf 0.212295
+LL.sort-10-strs     :           4,569 |           4,569 |           4,569 |           4,569 | w           1 | tf 0.000116
+LL.log-10-hellos    :          20,529 |          20,529 |          20,529 |          20,529 | w           1 | tf 0.000516
+LL.benchmarks-total :          30,637 |          30,637 |          30,637 |          30,637 | w           1 | tf 0.000769
+LL.lat-report       :         150,754 |         150,754 |         394,341 |         280,637 | w           6 | tf 0.042162
+totally-adhoc       :              25 |              25 |              79 |              52 | w           2 | tf 0.000006

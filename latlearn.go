@@ -348,6 +348,7 @@ func latlearn_report2( params []string) {
     time_param := fmt.Sprintf( "since LL init: %s ns\n\n", si_txt)
     io.WriteString( f, time_param)
 
+    io.WriteString( f, fmt.Sprintf( "Go ver:     %s\n", runtime.Version()))
     io.WriteString( f, fmt.Sprintf( "GOARCH:     %s\n", runtime.GOARCH))
     io.WriteString( f, fmt.Sprintf( "GOOS:       %s\n", runtime.GOOS))
     io.WriteString( f, fmt.Sprintf( "NumCPU:     %d\n", runtime.NumCPU()))
