@@ -63,8 +63,8 @@ func latlearn_init2( spans_app []string) {
     // latlearn's built-in benchmark spans
     //     for purposes of comparison with the enduser's reported span metrics
     spans_latlearn_builtin := []string {
-        "LL.no-op",            "LL.span-map-lookup",
-        "LL.sort-10-strs",     "LL.log-10-hellos",
+        "LL.no-op",              "LL.span-map-lookup", "LL.add-2-int-literals",
+        "LL.add-2-str-literals", "LL.sort-10-strs",    "LL.log-10-hellos",
         "LL.benchmarks-total", "LL.lat-report"}
 
     spans       := []string {}
@@ -192,19 +192,40 @@ func latlearn_benchmarks() {
     pre      :=      "latlearn_benchmarks"
     ll_bt    := llB( "LL.benchmarks-total")
 
-    ll       := llB( "LL.span-map-lookup")
-    foo, bar := latency_learners[ "LL.no-op"]
-    ll.A()
-    _ = foo // yes, is reason why we are doing this
-    _ = bar // ditto
+    for i    := 0; i < 1000; i++ {
+        ll   := llB( "LL.add-2-int-literals")
+        a    := (1 + 2)
+        _     = a // make closer to real, and compiler happy
+        ll.A()
+    }
 
-    strs     := []string { "Zelda", "Hoth", "Abro",  "Daneel", "Tempest", "Cthulhu", "Bonk", "Arky","Ys", "Jude Law"}
+    for i    := 0; i < 1000; i++ {
+        ll   := llB( "LL.add-2-str-literals")
+        c    := ("a" + "b")
+        _     = c // make closer to real, and compiler happy
+        ll.A()
+    }
 
-    ll        = llB( "LL.sort-10-strs")
-    sort.Strings( strs)
-    ll.A()
+    for i    := 0; i < 1000; i++ {
+        ll   := llB( "LL.span-map-lookup")
+        a, b := latency_learners[ "LL.no-op"]
+        ll.A()
+        _     = a // yes, is reason why we are doing this
+        _     = b // ditto
+    }
 
-    ll        = llB( "LL.log-10-hellos")
+    strs         := []string { "Zelda", "Hoth", "Abro",  "Daneel", "Tempest", "Cthulhu", "Bonk", "Arky","Ys", "Jude Law"}
+    for i        := 0; i < 1000; i++ {
+        strs2    := []string {}
+        for _, s := range strs {
+            strs2 = append( strs2, s)
+        }
+        ll   := llB( "LL.sort-10-strs")
+        sort.Strings( strs2) // sorts the given slice in-place
+        ll.A()
+    }
+
+    ll       := llB( "LL.log-10-hellos")
     for i    := 0; i < 10; i++ {
         log.Printf( "%s: log measure test\n", pre)
     }
@@ -317,12 +338,12 @@ func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead
             tf_txt        = fmt.Sprintf( "%8f", my_frac)
         }
         line = fmt.Sprintf(
-                   "%-20s: %15s | %15s | %15s | %15s | w %11s | tf %8s",
+                   "%-21s: %15s | %15s | %15s | %15s | w %11s | tf %8s",
                    ll.name, min_txt, last_txt, max_txt, mean_txt, weight_txt, tf_txt)
     } else {
         // min, last, max, mean, weight of mean (# of calls for this span), time fraction (of current time difference since latlearn_init, in/under this span)
         line = fmt.Sprintf(
-                   "%-20s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ????????",
+                   "%-21s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ????????",
                    ll.name)
     }
 
@@ -380,7 +401,7 @@ func latlearn_report2( params []string) {
 
     // write a report entry (to the file) for the latency stats on each tracked span:
     header  := fmt.Sprintf(
-                   "%-20s: %15s | %15s | %15s | %15s | %13s | %11s",
+                   "%-21s: %15s | %15s | %15s | %15s | %13s | %11s",
                    "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac")
     to_file( f, header)
 
