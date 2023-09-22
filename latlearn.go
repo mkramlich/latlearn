@@ -63,7 +63,8 @@ func latlearn_init2( spans_app []string) {
     // latlearn's built-in benchmark spans
     //     for purposes of comparison with the enduser's reported span metrics
     spans_latlearn_builtin := []string {
-        "LL.no-op",            "LL.sort-10-strs", "LL.log-10-hellos",
+        "LL.no-op",            "LL.span-map-lookup",
+        "LL.sort-10-strs",     "LL.log-10-hellos",
         "LL.benchmarks-total", "LL.lat-report"}
 
     spans       := []string {}
@@ -188,17 +189,23 @@ func latlearn_measure_overhead_estimate() (overhead time.Duration, exists bool) 
 func latlearn_benchmarks() {
     if !init_completed { return}
 
-    pre   :=      "latlearn_benchmarks"
-    ll_bt := llB( "LL.benchmarks-total")
+    pre      :=      "latlearn_benchmarks"
+    ll_bt    := llB( "LL.benchmarks-total")
 
-    strs  := []string { "Zelda", "Hoth", "Abro",  "Daneel", "Tempest", "Cthulhu", "Bonk", "Arky","Ys", "Jude Law"}
+    ll       := llB( "LL.span-map-lookup")
+    foo, bar := latency_learners[ "LL.no-op"]
+    ll.A()
+    _ = foo // yes, is reason why we are doing this
+    _ = bar // ditto
 
-    ll    := llB( "LL.sort-10-strs")
+    strs     := []string { "Zelda", "Hoth", "Abro",  "Daneel", "Tempest", "Cthulhu", "Bonk", "Arky","Ys", "Jude Law"}
+
+    ll        = llB( "LL.sort-10-strs")
     sort.Strings( strs)
     ll.A()
 
-    ll     = llB( "LL.log-10-hellos")
-    for i := 0; i < 10; i++ {
+    ll        = llB( "LL.log-10-hellos")
+    for i    := 0; i < 10; i++ {
         log.Printf( "%s: log measure test\n", pre)
     }
     ll.A()
