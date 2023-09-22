@@ -344,7 +344,7 @@ func latlearn_report2( params []string) {
     t2         := time.Now()         // time.Time
     since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
     si_txt     := number_grouped( int64( since_init), ",")
-    time_param := fmt.Sprintf( "since LL init: %s ns\n", si_txt)
+    time_param := fmt.Sprintf( "since LL init: %s ns\n\n", si_txt)
     io.WriteString( f, time_param)
 
     // Context Params (which may impact interpretation of the reported span metrics)

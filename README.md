@@ -5,7 +5,10 @@ https://github.com/mkramlich/latlearn
 
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
 
-For each span you instrument it will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
+To see an ultra short (9 second!) video of what latlearn can do, here's a link to a screencast clip on YouTube, of a report file `watch` session:
+    [https://youtu.be/H5EojV3vlYc]
+
+For each span you instrument, latlearn will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
 
 It supports both "expected" spans -- ones mainly where you care about having a stable ordering of them when printed in the report. As well as "ad hoc" spans. You can also choose to do either an "eager init" of latlearn, or a lazy init. A lazy init happens if you call llB() before having previously made an explicit call to init latlearn. In that case, latlearn will init itself (prepare it's internal state as needed) for you, under the hood.
 
