@@ -77,6 +77,27 @@ func main() {
     latlearn_report_fpath = "latlearn-report4.txt"
     latlearn_report() // next time you gen any report, that span will be added to end
 
+    latlearn_report_fpath = "latlearn-report5.txt"
     latlearn_should_report_builtins = false
     latlearn_report() // this report will NOT include any of latlearn's built-in spans
+
+    // Now let's make a report where lastlearn will try to subtract the measuring cost
+    // from all reported span metrics. It is only a "good faith" effort. An estimate or
+    // guess. For this purpose it uses the metrics for the built-in "LL.no-op" and uses
+    // it's currwnt "min" value for latency. An observed minimum is a good faith attempt
+    // to try to determine the true, inescapable latency cost of any task (at least on
+    // the current hardware, and under ideal conditions) but there are too many other
+    // impacting conditions which are outside our control (typically) to be able to say
+    // with 100% confidence that we know the TRUE minimum and therefore "correct" cost.
+    // By this time, in everything we've told you and shown you so far about latlearn,
+    // you should appreciate why we did make an effort to "self-sample" and include
+    // various built-in benchmarks, especially the "no-op" span. So we *would* be able
+    // to make a reasonable estimate of the latency costs that were imposed/experienced
+    // by latlearn, itself.
+
+    latlearn_report_fpath = "latlearn-report6.txt"
+    latlearn_should_report_builtins   = true
+    latlearn_should_subtract_overhead = true // this is false by default
+    latlearn_report() // in report notice that all the previous reported metrics shrunk
+    // Except... for LL.no-op's min. That is the only span and field we EXEMPT from this overhead compensation feature. We exempt it so that it's original value passes thru into the generated report. So you know by *how* much the other reported numbers have shrunk!
 }

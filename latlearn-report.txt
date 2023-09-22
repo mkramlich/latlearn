@@ -1,13 +1,16 @@
 Latency Report (https://github.com/mkramlich/latlearn)
-since LL init: 38,989,830 ns
-ver=1.2, commit=whatever, N=2, cores=2
+
+latlearn_should_subtract_overhead: true
+metric treated as overhead: LL.no-op, min
+since LL init: 51,814,543 ns
 
 span                :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac
-print-yo            :           1,838 |           1,838 |           1,838 |           1,838 | w           1 | tf 0.000047
-fn1                 :           1,863 |           1,863 |           1,863 |           1,863 | w           1 | tf 0.000048
-fn2                 :              78 |              86 |          28,642 |              87 | w     100,234 | tf 0.224936
-LL.no-op            :              76 |              84 |          33,601 |              84 | w     100,242 | tf 0.217587
-LL.sort-10-strs     :           3,386 |           3,386 |           3,386 |           3,386 | w           1 | tf 0.000087
-LL.log-10-hellos    :          21,587 |          21,587 |          21,587 |          21,587 | w           1 | tf 0.000554
-LL.benchmarks-total :          35,254 |          35,254 |          35,254 |          35,254 | w           1 | tf 0.000904
-LL.lat-report       :         235,111 |         324,568 |         324,568 |         286,205 | w           3 | tf 0.022022
+print-yo            :           2,455 |           2,455 |           2,455 |           2,455 | w           1 | tf 0.000049
+fn1                 :           2,153 |           2,153 |           2,153 |           2,153 | w           1 | tf 0.000043
+fn2                 :               1 |               7 |          40,872 |              35 | w     100,234 | tf 0.219346
+LL.no-op            :              78 |               2 |          39,843 |              31 | w     100,247 | tf 0.211815
+LL.sort-10-strs     :           5,439 |           5,439 |           5,439 |           5,439 | w           1 | tf 0.000106
+LL.log-10-hellos    :          34,941 |          34,941 |          34,941 |          34,941 | w           1 | tf 0.000676
+LL.benchmarks-total :          50,677 |          50,677 |          50,677 |          50,677 | w           1 | tf 0.000980
+LL.lat-report       :         130,854 |         130,854 |         472,605 |         327,588 | w           6 | tf 0.037943
+totally-adhoc       :              12 |              30 |              30 |              21 | w           2 | tf 0.000004

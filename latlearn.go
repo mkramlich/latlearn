@@ -33,12 +33,13 @@ type LatencyLearner struct { // assumes only single-thread/one-goroutine-at-a-ti
 
 // tracked_spans built/modified ONLY by the latlearn_init and llB fns
 // it keeps a stable order of keys, for a better UX of the report
-var tracked_spans                   []string
-var latlearn_report_fpath           string = "latlearn-report.txt"
-var latency_learners                map[string]*LatencyLearner
-var init_time                       time.Time
-var init_completed                  bool = false // explicit. we expect this starts false
-var latlearn_should_report_builtins bool = true
+var tracked_spans                     []string
+var latlearn_report_fpath             string = "latlearn-report.txt"
+var latency_learners                  map[string]*LatencyLearner
+var init_time                         time.Time
+var init_completed                    bool = false // explicit. we expect this starts false
+var latlearn_should_report_builtins   bool = true
+var latlearn_should_subtract_overhead bool = false
 
 
 // for latlearn's internal use only
@@ -172,6 +173,17 @@ func latency_measure_self_sample() {
     ll_noop.after() // NOTE: we dont call A() so dont unbounded-recurse back into this fn
 }
 
+func latlearn_measure_overhead_estimate() (overhead time.Duration, exists bool) {
+    if !init_completed         { return -1, false}
+
+    ll_noop, found := latency_learners[ "LL.no-op"]
+
+    if !found                       { return -1, false}
+    if !ll_noop.pair_ever_completed { return -1, false}
+
+    return ll_noop.min, true
+}
+
 func latlearn_benchmarks() {
     if !init_completed { return}
 
@@ -254,29 +266,51 @@ func number_grouped( val int64, sep string) string { // sep value like "," or " 
     return s3
 }
 
-func (ll *LatencyLearner) report( f *os.File, since_init time.Duration /*int64. ns*/) {
+func overhead_comp( metric_in int64, overhead int64) (metric_out int64) { // "comp" for compensate
+    if latlearn_should_subtract_overhead {
+        metric_out = (metric_in - overhead)
+    } else {
+        metric_out = metric_in
+    }
+    return metric_out
+}
 
-    line    := ""
+func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead time.Duration) { // time.Duration is int64 ns
+    line := ""
 
     if ll.pair_ever_completed {
-        lat_min_txt      := fmt.Sprintf( "%15s", number_grouped( int64( ll.min), ","))
-        lat_last_txt     := fmt.Sprintf( "%15s", number_grouped( int64( ll.latency_last), ","))
-        lat_max_txt      := fmt.Sprintf( "%15s", number_grouped( int64( ll.max), ","))
-        lat_mean_txt     := "???,???,???,???"
-        weight_txt       := "???,???,???"
-        tf_txt           := "????????"
+        min              := int64(ll.min)
+        if (overhead != -1) && (ll.name != "LL.no-op") {
+            min           = overhead_comp( int64(ll.min),          int64(overhead))
+        }
+        min_txt          := fmt.Sprintf( "%15s", number_grouped( int64( min), ","))
+
+        last             := overhead_comp( int64(ll.latency_last), int64(overhead))
+        last_txt         := fmt.Sprintf( "%15s", number_grouped( int64( last), ","))
+
+        max              := overhead_comp( int64(ll.max),          int64(overhead))
+        max_txt          := fmt.Sprintf( "%15s", number_grouped( int64( max), ","))
+
+        mean_txt         := "???,???,???,???"
+        weight_txt       :=     "???,???,???"
+        tf_txt           :=        "????????"
         weight           := ll.weight_of_cumul_latency
+
         if weight         > 0 {
             cum_ns       := ll.cumul_latency.Nanoseconds() // int64. ns
+
             lat_mean     := cum_ns / int64( weight)
-            lat_mean_txt  = number_grouped( int64( lat_mean), ",")
-            weight_txt    = number_grouped( int64( weight),   ",")
+
+            mean         := overhead_comp(         lat_mean, int64(overhead))
+            mean_txt      = number_grouped( int64( mean),   ",")
+
+            weight_txt    = number_grouped( int64( weight), ",")
             my_frac      := float64( cum_ns) / float64( since_init) // float64. fraction
             tf_txt        = fmt.Sprintf( "%8f", my_frac)
         }
         line = fmt.Sprintf(
                    "%-20s: %15s | %15s | %15s | %15s | w %11s | tf %8s",
-                   ll.name, lat_min_txt, lat_last_txt, lat_max_txt, lat_mean_txt, weight_txt, tf_txt)
+                   ll.name, min_txt, last_txt, max_txt, mean_txt, weight_txt, tf_txt)
     } else {
         // min, last, max, mean, weight of mean (# of calls for this span), time fraction (of current time difference since latlearn_init, in/under this span)
         line = fmt.Sprintf(
@@ -301,7 +335,11 @@ func latlearn_report2( params []string) {
     }
     defer f.Close()
 
-    io.WriteString( f, "Latency Report (https://github.com/mkramlich/latlearn)\n")
+    io.WriteString( f, "Latency Report (https://github.com/mkramlich/latlearn)\n\n")
+    io.WriteString( f, fmt.Sprintf("latlearn_should_subtract_overhead: %v\n", latlearn_should_subtract_overhead))
+    if latlearn_should_subtract_overhead {
+        io.WriteString( f, "metric treated as overhead: LL.no-op, min\n")
+    }
 
     t2         := time.Now()         // time.Time
     since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
@@ -331,9 +369,15 @@ func latlearn_report2( params []string) {
                    "%-20s: %15s | %15s | %15s | %15s | %13s | %11s",
                    "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac")
     to_file( f, header)
+
+    var overhead time.Duration = -1 // this value signals that we have no usable estimate
+    if latlearn_should_subtract_overhead {
+        overhead, _ = latlearn_measure_overhead_estimate()
+    }
+
     for _, span := range tracked_spans {
         if !latlearn_should_report_builtins && strings.HasPrefix( span,"LL.") { continue}
-        latency_learners[ span].report( f, since_init) // TODO add found-in-map guard
+        latency_learners[ span].report( f, since_init, overhead) // TODO add found-in-map guard
     }
 
     ll.A()
