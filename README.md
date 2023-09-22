@@ -5,7 +5,7 @@ https://github.com/mkramlich/latlearn
 
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
 
-To see an ultra short (9 second!) video of what latlearn can do, here's a link to a screencast clip on YouTube, of a report file `watch` session:
+To see an ultra short (7 second!) video of what latlearn can do, here's a link to a screencast clip on YouTube, of a report file `watch` session:
     [https://youtu.be/H5EojV3vlYc]
 
 For each span you instrument, latlearn will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
