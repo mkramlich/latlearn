@@ -148,32 +148,28 @@ func (ll *LatencyLearner) after() {
 
     ll.pair_underway            = false
     ll.pair_ever_completed      = true
-    // NOTE that both A() and llA() include a self_sample call. but after() does not
 }
 
 func (ll *LatencyLearner) A() {
     ll.after()
-    latency_measure_self_sample()
-    // NOTE that both A() and llA() include a self_sample call. but after() does not
 }
 
 func llA( name string) {
     if !init_completed { return}
 
-    latency_learners[ name].after()
-    latency_measure_self_sample()
-    // NOTE that both A() and llA() include a self_sample call. but after() does not
+    latency_learners[ name].after() // TODO map found guard
 }
 
 func latency_measure_self_sample() {
-    if !init_completed { return}
+    if !init_completed { return} // TODO auto-init, or, return error
 
-    // Below is to help measure (1) the cost of measuring itself, and
-    // and (2) to do so around the time of a real measure occurring
-    ll_noop := latency_learners[ "LL.no-op"]
-
-    ll_noop.before()
-    ll_noop.after() // NOTE: we dont call A() so dont unbounded-recurse back into this fn
+    // below is to (try to) measure/estimate the latency cost of a latlearn measurement
+    // but lots of subtle issues and complexity lurk here
+    ll    := latency_learners[ "LL.no-op"]
+    for i := 0; i < 1000000; i++ { // we'll do it 1 million times, hoping to mitigate (somewhat, maybe) the effects of host load spikes, GC runs, etc
+        ll.before()
+        ll.after()
+    }
 }
 
 func latlearn_measure_overhead_estimate() (overhead time.Duration, exists bool) {
@@ -188,10 +184,12 @@ func latlearn_measure_overhead_estimate() (overhead time.Duration, exists bool) 
 }
 
 func latlearn_benchmarks() {
-    if !init_completed { return}
+    if !init_completed { return} // TODO auto-init, or, return error
 
     pre      :=      "latlearn_benchmarks"
     ll_bt    := llB( "LL.benchmarks-total")
+
+    latency_measure_self_sample()
 
     for i    := 0; i < 1000; i++ {
         ll   := llB( "LL.add-2-int-literals")
