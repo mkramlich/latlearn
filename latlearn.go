@@ -15,6 +15,7 @@ import (
     "log"
     "os"
     "runtime"
+    "runtime/debug"
     "sort"
     "strings"
     "time"
@@ -376,32 +377,36 @@ func latlearn_report2( params []string) {
     time_param := fmt.Sprintf( "since LL init: %s ns\n\n", si_txt)
     io.WriteString( f, time_param)
 
-    io.WriteString( f, fmt.Sprintf( "Go ver:       %s\n", runtime.Version()))
-    io.WriteString( f, fmt.Sprintf( "GOARCH:       %s\n", runtime.GOARCH))
-    io.WriteString( f, fmt.Sprintf( "GOOS:         %s\n", runtime.GOOS))
-    io.WriteString( f, fmt.Sprintf( "NumCPU:       %d\n", runtime.NumCPU()))
-    io.WriteString( f, fmt.Sprintf( "GOMAXPROCS:   %d\n", runtime.GOMAXPROCS( -1)))
-    io.WriteString( f, fmt.Sprintf( "NumGoroutine: %d\n", runtime.NumGoroutine()))
+    io.WriteString( f, fmt.Sprintf( "Go ver:         %s\n", runtime.Version()))
+    io.WriteString( f, fmt.Sprintf( "GOARCH:         %s\n", runtime.GOARCH))
+    io.WriteString( f, fmt.Sprintf( "GOOS:           %s\n", runtime.GOOS))
+    io.WriteString( f, fmt.Sprintf( "NumCPU:         %d\n", runtime.NumCPU()))
+    io.WriteString( f, fmt.Sprintf( "GOMAXPROCS:     %d\n", runtime.GOMAXPROCS( -1)))
+    io.WriteString( f, fmt.Sprintf( "NumGoroutine:   %d\n", runtime.NumGoroutine()))
     //io.WriteString( f, fmt.Sprintf( "NumCgoCall:   %d\n", runtime.NumCgoCall()))
 
+    mem_limit     := debug.SetMemoryLimit( -1)
+    mem_limit_str := number_grouped( mem_limit, ",")
+    io.WriteString( f, fmt.Sprintf( "SetMemoryLimit: %s bytes\n", mem_limit_str))
+
     gogc := ""
-    if val, ok := os.LookupEnv(     "GOGC"); ok {         gogc = val}
-    io.WriteString( f, fmt.Sprintf( "GOGC:         %s\n", gogc))
+    if val, ok := os.LookupEnv(     "GOGC"); ok {           gogc = val}
+    io.WriteString( f, fmt.Sprintf( "GOGC:           %s\n", gogc))
 
     term_rows  := "?"
     term_cols  := "?"
-    if val, ok := os.LookupEnv(     "LINES");   ok {      term_rows = val}
-    if val, ok := os.LookupEnv(     "COLUMNS"); ok {      term_cols = val}
-    io.WriteString( f, fmt.Sprintf( "LINES:      %s\n",   term_rows))
-    io.WriteString( f, fmt.Sprintf( "COLUMNS:    %s\n", term_cols))
+    if val, ok := os.LookupEnv(     "LINES");   ok {        term_rows = val}
+    if val, ok := os.LookupEnv(     "COLUMNS"); ok {        term_cols = val}
+    io.WriteString( f, fmt.Sprintf( "LINES:          %s\n", term_rows))
+    io.WriteString( f, fmt.Sprintf( "COLUMNS:        %s\n", term_cols))
 
     host       := ""
-    if val, ok := os.LookupEnv(     "HOST"); ok {         host = val}
-    io.WriteString( f, fmt.Sprintf( "HOST:       %s\n",   host))
+    if val, ok := os.LookupEnv(     "HOST"); ok {           host = val}
+    io.WriteString( f, fmt.Sprintf( "HOST:           %s\n", host))
 
     term       := ""
-    if val, ok := os.LookupEnv(     "TERM"); ok {         term = val}
-    io.WriteString( f, fmt.Sprintf( "TERM:       %s\n",   term))
+    if val, ok := os.LookupEnv(     "TERM"); ok {           term = val}
+    io.WriteString( f, fmt.Sprintf( "TERM:           %s\n", term))
 
     io.WriteString( f, "\n")
 
