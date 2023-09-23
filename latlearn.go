@@ -384,6 +384,10 @@ func latlearn_report2( params []string) {
     io.WriteString( f, fmt.Sprintf( "NumGoroutine: %d\n", runtime.NumGoroutine()))
     //io.WriteString( f, fmt.Sprintf( "NumCgoCall:   %d\n", runtime.NumCgoCall()))
 
+    gogc := ""
+    if val, ok := os.LookupEnv(     "GOGC"); ok {         gogc = val}
+    io.WriteString( f, fmt.Sprintf( "GOGC:         %s\n", gogc))
+
     term_rows  := "?"
     term_cols  := "?"
     if val, ok := os.LookupEnv(     "LINES");   ok {      term_rows = val}
