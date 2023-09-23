@@ -1,0 +1,87 @@
+Latency Report (https://github.com/mkramlich/latlearn)
+
+latlearn_should_subtract_overhead: true
+metric treated as overhead: LL.no-op, min
+since LL init: 21,473,942,907 ns
+
+Go ver:         go1.20.4
+GOARCH:         amd64
+GOOS:           darwin
+NumCPU:         4
+GOMAXPROCS:     4
+NumGoroutine:   3
+SetMemoryLimit: 9,223,372,036,854,775,807 bytes
+GOGC:           
+LINES:          23
+COLUMNS:        89
+HOST:           
+TERM:           xterm-256color
+
+cur6.4.20221231, vlc str 3.0.11 , play       21 s, tock    318    
+anim    318    , getchar 58   ms, alive   T      , invuln  T      
+av yx    31,133, world    80,345, screen   24, 90, devmode F      
+logging F      , latrept T      , pprof   F      , sound   T      
+dvbuild T      , devtest T      , demoldd T      , demowev F      
+demoslp F      , demoses F      , demoswp F      , demorbm F      
+demoogr F      , playtes F      , advergm F      , demovid T      
+hum qty 545    , humaqty 285    
+
+span                 :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac | span                 
+loop                 :       5,040,217 |      73,449,278 |     202,730,723 |      66,591,034 | w         317 | tf 0.983023 | loop                 
+rend                 :         876,448 |       2,847,198 |      29,348,530 |       2,991,491 | w         318 | tf 0.044301 | rend                 
+draw-arena           :         409,609 |       2,233,477 |       5,173,587 |       1,596,105 | w         318 | tf 0.023637 | draw-arena           
+PM-gc-refup          :          52,564 |         312,967 |      27,705,720 |       1,123,623 | w         318 | tf 0.016640 | PM-gc-refup          
+PM.handle_input      :         185,218 |      63,673,871 |      68,300,364 |      40,685,755 | w         318 | tf 0.602502 | PM.handle_input      
+get-char             :         179,121 |      63,664,075 |      68,291,479 |      40,641,347 | w         318 | tf 0.601844 | get-char             
+tick                 :         595,107 |       5,111,136 |     133,714,435 |      19,804,324 | w         318 | tf 0.293276 | tick                 
+play-sound           :           3,496 |       3,378,832 |      35,795,912 |       4,182,182 | w         836 | tf 0.162819 | play-sound           
+PM.play-sound        :           3,932 |       3,380,398 |      35,797,493 |       4,213,603 | w         792 | tf 0.155409 | PM.play-sound        
+laz                  :           1,217 |         100,168 |      38,636,025 |         638,030 | w         318 | tf 0.009450 | laz                  
+mms                  :           1,105 |           7,287 |          24,346 |           3,685 | w         318 | tf 0.000056 | mms                  
+hms                  :          26,460 |       1,223,934 |      11,432,818 |       1,505,819 | w         318 | tf 0.022300 | hms                  
+tms                  :             134 |           1,716 |         317,246 |          14,711 | w         318 | tf 0.000219 | tms                  
+tank-tick            :             261 |           2,855 |     107,922,166 |      15,144,023 | w         318 | tf 0.224264 | tank-tick            
+ogre-tick            :         294,919 |       1,827,054 |     110,209,709 |      16,230,454 | w         318 | tf 0.240352 | ogre-tick            
+zh-tick              :          96,996 |         314,202 |       6,019,319 |         414,980 | w         286 | tf 0.005528 | zh-tick              
+nh                   :         120,309 |       1,045,641 |       9,011,686 |         621,287 | w         730 | tf 0.021123 | nh                   
+nh-pov-si            :         119,490 |       1,691,953 |      29,219,100 |       1,203,363 | w       1,846 | tf 0.103453 | nh-pov-si            
+zmh                  :          14,169 |         331,641 |       4,063,894 |         222,468 | w         318 | tf 0.003296 | zmh                  
+hmove                :          55,671 |         437,880 |      12,761,241 |         247,328 | w         318 | tf 0.003664 | hmove                
+boltf                :             720 |         130,679 |       3,899,325 |         141,306 | w         318 | tf 0.002094 | boltf                
+boltd                :             455 |          10,735 |         328,047 |           8,238 | w         318 | tf 0.000123 | boltd                
+is-mv-bl             :               4 |             408 |       2,604,112 |             549 | w      19,624 | tf 0.000573 | is-mv-bl             
+av-mv-ifcan          :           3,276 |           8,704 |       1,164,009 |          23,906 | w          74 | tf 0.000083 | av-mv-ifcan          
+write-scr            :         135,900 |         417,433 |       2,059,500 |         431,036 | w          76 | tf 0.001526 | write-scr            
+codecay              :          10,232 |         136,823 |         578,957 |          53,865 | w         318 | tf 0.000799 | codecay              
+supurge              :           2,509 |          52,612 |       2,967,055 |          74,413 | w         318 | tf 0.001103 | supurge              
+bmhlt                :               0 |             886 |          10,123 |             228 | w         318 | tf 0.000005 | bmhlt                
+bdrmd                :             432 |          47,009 |         192,408 |          17,327 | w         318 | tf 0.000258 | bdrmd                
+ani-mov              :           1,571 |          10,711 |         167,089 |          11,133 | w         318 | tf 0.000166 | ani-mov              
+fblog-exp            :             210 |           7,504 |          58,439 |           4,049 | w         318 | tf 0.000061 | fblog-exp            
+riv-ws               :              68 |             864 |          59,039 |           1,235 | w         318 | tf 0.000019 | riv-ws               
+exp-evo              :             165 |           1,074 |           9,118 |             559 | w         318 | tf 0.000009 | exp-evo              
+zmap-tick            :             260 |           1,460 |           8,936 |             716 | w         318 | tf 0.000012 | zmap-tick            
+call-exp             :             148 |           2,709 |          28,099 |           1,431 | w         318 | tf 0.000022 | call-exp             
+hk-rv                :              56 |             697 |          22,520 |             304 | w         318 | tf 0.000006 | hk-rv                
+hk-ep                :              75 |             804 |          28,552 |             460 | w         318 | tf 0.000008 | hk-ep                
+hk-mp                :             497 |           3,453 |         131,184 |           2,400 | w         318 | tf 0.000037 | hk-mp                
+hk-rp                :              82 |             437 |           6,029 |             486 | w         318 | tf 0.000008 | hk-rp                
+hgab                 :          30,727 |         189,410 |         720,549 |          80,967 | w         318 | tf 0.001200 | hgab                 
+vfxtik               :              29 |             452 |       2,100,653 |          13,764 | w         318 | tf 0.000205 | vfxtik               
+is-valid-trg         :             144 |           1,871 |      16,349,870 |           2,144 | w     710,896 | tf 0.073592 | is-valid-trg         
+O-is-valid-trg       :             137 |             652 |       7,948,632 |           1,077 | w     439,657 | tf 0.023664 | O-is-valid-trg       
+plot-ticks           :           1,025 |           3,067 |          32,436 |           2,432 | w         318 | tf 0.000037 | plot-ticks           
+escr-ticks           :             454 |         318,301 |       6,022,828 |         381,058 | w         318 | tf 0.005644 | escr-ticks           
+sprite-reg           :             249 |          10,369 |         371,970 |           2,552 | w       2,062 | tf 0.000253 | sprite-reg           
+sprite-chgloc        :             254 |           2,066 |       3,798,068 |           1,660 | w      27,831 | tf 0.002253 | sprite-chgloc        
+sbc-remove           :              26 |             842 |       2,013,177 |             689 | w      28,600 | tf 0.001022 | sbc-remove           
+sprite-delk          :           1,581 |          10,796 |       3,159,476 |          19,165 | w         349 | tf 0.000313 | sprite-delk          
+SB.lat-report        :          37,396 |         103,568 |       8,586,879 |         112,801 | w         318 | tf 0.001672 | SB.lat-report        
+LL.no-op             :              78 |              10 |          94,865 |              21 | w   1,000,000 | tf 0.004650 | LL.no-op             
+LL.span-map-lookup   :              21 |              24 |             471 |              25 | w       1,000 | tf 0.000005 | LL.span-map-lookup   
+LL.add-2-int-literals:               5 |              50 |             167 |              23 | w       1,000 | tf 0.000005 | LL.add-2-int-literals
+LL.add-2-str-literals:               5 |               9 |             342 |              32 | w       1,000 | tf 0.000005 | LL.add-2-str-literals
+LL.sort-10-strs      :             316 |             358 |           3,472 |             360 | w       1,000 | tf 0.000020 | LL.sort-10-strs      
+LL.log-10-hellos     :           1,231 |           1,231 |           1,231 |           1,231 | w           1 | tf 0.000000 | LL.log-10-hellos     
+LL.benchmarks-total  :     205,830,695 |     205,830,695 |     205,830,695 |     205,830,695 | w           1 | tf 0.009585 | LL.benchmarks-total  
+LL.lat-report        :         853,589 |       2,942,422 |      31,605,016 |       2,819,534 | w         317 | tf 0.041623 | LL.lat-report        

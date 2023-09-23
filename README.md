@@ -53,7 +53,7 @@ Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, fro
     * benchmark regression tests (for basic QA automation & CI/CD pipelines)
     * engine performance tuning & optimization refactors
 
-To help understand what latlearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at `./latency-report.txt` But it is also recommended that you run `./buildrun.sh` and poke around.
+To help understand what latlearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at `./report-examples/latency-report.txt` But it is also recommended that you run `./buildrun.sh` and poke around.
 
 The latlearn code is NOT intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
 
