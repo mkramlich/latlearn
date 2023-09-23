@@ -338,13 +338,13 @@ func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead
             tf_txt        = fmt.Sprintf( "%8f", my_frac)
         }
         line = fmt.Sprintf(
-                   "%-21s: %15s | %15s | %15s | %15s | w %11s | tf %8s",
-                   ll.name, min_txt, last_txt, max_txt, mean_txt, weight_txt, tf_txt)
+                   "%-21s: %15s | %15s | %15s | %15s | w %11s | tf %8s | %-21s",
+                   ll.name, min_txt, last_txt, max_txt, mean_txt, weight_txt, tf_txt, ll.name)
     } else {
         // min, last, max, mean, weight of mean (# of calls for this span), time fraction (of current time difference since latlearn_init, in/under this span)
         line = fmt.Sprintf(
-                   "%-21s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ????????",
-                   ll.name)
+                   "%-21s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | %-21s",
+                   ll.name, ll.name)
     }
 
     to_file( f, line)
@@ -382,6 +382,7 @@ func latlearn_report2( params []string) {
     io.WriteString( f, fmt.Sprintf( "NumCPU:       %d\n", runtime.NumCPU()))
     io.WriteString( f, fmt.Sprintf( "GOMAXPROCS:   %d\n", runtime.GOMAXPROCS( -1)))
     io.WriteString( f, fmt.Sprintf( "NumGoroutine: %d\n", runtime.NumGoroutine()))
+    //io.WriteString( f, fmt.Sprintf( "NumCgoCall:   %d\n", runtime.NumCgoCall()))
 
     term_rows  := "?"
     term_cols  := "?"
@@ -419,8 +420,8 @@ func latlearn_report2( params []string) {
 
     // write a report entry (to the file) for the latency stats on each tracked span:
     header  := fmt.Sprintf(
-                   "%-21s: %15s | %15s | %15s | %15s | %13s | %11s",
-                   "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac")
+                   "%-21s: %15s | %15s | %15s | %15s | %13s | %11s | %-21s",
+                   "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac", "span")
     to_file( f, header)
 
     var overhead time.Duration = -1 // this value signals that we have no usable estimate

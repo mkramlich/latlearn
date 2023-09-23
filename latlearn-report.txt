@@ -2,7 +2,7 @@ Latency Report (https://github.com/mkramlich/latlearn)
 
 latlearn_should_subtract_overhead: true
 metric treated as overhead: LL.no-op, min
-since LL init: 44,119,459 ns
+since LL init: 44,597,945 ns
 
 Go ver:       go1.20.4
 GOARCH:       amd64
@@ -16,16 +16,16 @@ HOST:
 TERM:       xterm-256color
 
 
-span                 :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac
-print-yo             :           2,105 |           2,105 |           2,105 |           2,105 | w           1 | tf 0.000049
-fn1                  :           1,988 |           1,988 |           1,988 |           1,988 | w           1 | tf 0.000047
-fn2                  :               4 |               9 |          20,667 |              13 | w     100,234 | tf 0.197767
-LL.no-op             :              74 |              19 |          15,650 |              11 | w     104,246 | tf 0.201379
-LL.span-map-lookup   :              16 |              40 |              68 |              21 | w       1,000 | tf 0.002161
-LL.add-2-int-literals:               4 |               4 |              43 |               5 | w       1,000 | tf 0.001800
-LL.add-2-str-literals:               5 |               8 |              44 |               9 | w       1,000 | tf 0.001887
-LL.sort-10-strs      :             303 |             338 |           6,630 |             358 | w       1,000 | tf 0.009811
-LL.log-10-hellos     :          24,228 |          24,228 |          24,228 |          24,228 | w           1 | tf 0.000551
-LL.benchmarks-total  :       2,326,242 |       2,326,242 |       2,326,242 |       2,326,242 | w           1 | tf 0.052728
-LL.lat-report        :         279,647 |         341,831 |         399,673 |         342,620 | w           6 | tf 0.046604
-totally-adhoc        :               8 |               8 |              30 |              19 | w           2 | tf 0.000004
+span                 :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac | span                 
+print-yo             :           1,411 |           1,411 |           1,411 |           1,411 | w           1 | tf 0.000033 | print-yo             
+fn1                  :           1,121 |           1,121 |           1,121 |           1,121 | w           1 | tf 0.000027 | fn1                  
+fn2                  :               4 |              13 |          27,633 |              14 | w     100,234 | tf 0.199002 | fn2                  
+LL.no-op             :              74 |              24 |          83,466 |              11 | w     104,246 | tf 0.199790 | LL.no-op             
+LL.span-map-lookup   :              16 |              23 |              60 |              22 | w       1,000 | tf 0.002162 | LL.span-map-lookup   
+LL.add-2-int-literals:               5 |              26 |              82 |              10 | w       1,000 | tf 0.001891 | LL.add-2-int-literals
+LL.add-2-str-literals:               4 |               8 |              59 |               9 | w       1,000 | tf 0.001873 | LL.add-2-str-literals
+LL.sort-10-strs      :             302 |             343 |          16,950 |             367 | w       1,000 | tf 0.009909 | LL.sort-10-strs      
+LL.log-10-hellos     :          22,126 |          22,126 |          22,126 |          22,126 | w           1 | tf 0.000498 | LL.log-10-hellos     
+LL.benchmarks-total  :       2,339,006 |       2,339,006 |       2,339,006 |       2,339,006 | w           1 | tf 0.052448 | LL.benchmarks-total  
+LL.lat-report        :         177,055 |         177,055 |         674,257 |         347,130 | w           6 | tf 0.046711 | LL.lat-report        
+totally-adhoc        :              14 |              14 |              36 |              25 | w           2 | tf 0.000004 | totally-adhoc        
