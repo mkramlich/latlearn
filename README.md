@@ -39,6 +39,10 @@ There are no opaque binaries or external service dependencies. There is no "phon
 
 The combination of Total Transparency, Zero Dependencies, and Zero Price may be attractive for some devs or teams looking for an alternative to big/heavy/murky commercial packages or cloud services in this problem space. I won't name names but if I coughed and my cough sounded to you like "AtaOgd" or "Ew Relicked" or "Plunks" I'd say you were *fantastically* good at spelling the sounds of a cough! And then I would look at you funny, and slowly back away, all casual like.
 
+Real Use Cases
+
+Here's a brief write-up of a real use case where latlearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a perforamnce refactor was a success: `./benefits-example.md`
+
 The Full Story
 
 For more complex examples, features and permutations see `./example-app1.go` and use `./buildrun.sh` to run it.
