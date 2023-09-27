@@ -6,7 +6,7 @@ https://github.com/mkramlich/latlearn
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
 
 To see an ultra short (7 second!) video of what latlearn can do, here's a link to a screencast clip on YouTube, of a report file `watch` session:
-    [https://youtu.be/H5EojV3vlYc]
+    https://youtu.be/H5EojV3vlYc
 
 For each span you instrument, latlearn will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
 
@@ -49,9 +49,9 @@ For more complex examples, features and permutations see `./example-app1.go` and
 
 Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, from the private/closed-source Slartboz game's source tree. It was homegrown there in order to meet that game's early goals/needs for:
 
-    * in-game UX monitoring & dynamic adjustment of task strategies, to maintain QoS
-    * benchmark regression tests (for basic QA automation & CI/CD pipelines)
-    * engine performance tuning & optimization refactors
+* in-game UX monitoring & dynamic adjustment of task strategies, to maintain QoS
+* benchmark regression tests (for basic QA automation & CI/CD pipelines)
+* engine performance tuning & optimization refactors
 
 To help understand what latlearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at `./report-examples/latency-report.txt` But it is also recommended that you run `./buildrun.sh` and poke around.
 
@@ -84,5 +84,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2023 September 21
+2023 September 27
 
