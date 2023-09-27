@@ -41,7 +41,7 @@ The combination of Total Transparency, Zero Dependencies, and Zero Price may be 
 
 Real Use Cases
 
-Here's a brief write-up of a real use case where latlearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a perforamnce refactor was a success: `./benefits-example.md`
+Here's a brief write-up of a real use case where latlearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a performance refactor was a success: `./benefits-example.md`
 
 The Full Story
 
