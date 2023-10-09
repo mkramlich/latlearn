@@ -33,11 +33,34 @@ type LatencyLearner struct { // assumes only single-thread/one-goroutine-at-a-ti
     pair_ever_completed      bool
 }
 
+type VariantLatencyLearner struct {
+    *LatencyLearner
+    parent                   *LatencyLearner
+}
+
+type LatencyLearnerI interface {
+    getLL()                  *LatencyLearner
+    getVLL()                 *VariantLatencyLearner
+
+    before()
+    after()
+
+    B()
+    A()
+
+    report( *os.File, time.Duration, time.Duration)
+}
+
+func ( ll *LatencyLearner)        getLL()  *LatencyLearner        { return  ll}
+func ( ll *LatencyLearner)        getVLL() *VariantLatencyLearner { return nil}
+func (vll *VariantLatencyLearner) getLL()  *LatencyLearner        { return vll.LatencyLearner}
+func (vll *VariantLatencyLearner) getVLL() *VariantLatencyLearner { return vll}
+
 // tracked_spans built/modified ONLY by the latlearn_init and llB fns
 // it keeps a stable order of keys, for a better UX of the report
 var tracked_spans                     []string
 var latlearn_report_fpath             string = "latlearn-report.txt"
-var latency_learners                  map[string]*LatencyLearner
+var latency_learners                  map[string]LatencyLearnerI
 var init_time                         time.Time
 var init_completed                    bool = false // explicit. we expect this starts false
 var latlearn_should_report_builtins   bool = true
@@ -46,20 +69,37 @@ var latlearn_should_subtract_overhead bool = false
 
 // for latlearn's internal use only
 func latency_learner( span string) (ll *LatencyLearner, found bool) {
-    ll, found = latency_learners[ span]
-    if !found {
+    lli, found                 := latency_learners[ span]
+    if  !found {
         ll                      = new( LatencyLearner)
         ll.name                 = span
         latency_learners[ span] = ll
+    } else {
+        ll                      = lli.getLL()
     }
     return ll, found
 }
 
-func latlearn_init2( spans_app []string) {
+// for latlearn's internal use only
+func variant_latency_learner( span string) (vll *VariantLatencyLearner, found bool) {
+    lli, found                 := latency_learners[ span]
+    if  !found {
+        ll                     := new( LatencyLearner)
+        ll.name                 = span
+        vll                     = new( VariantLatencyLearner)
+        vll.LatencyLearner      =  ll
+        latency_learners[ span] = vll
+    } else {
+        vll                     = lli.getVLL()
+    }
+    return vll, found
+}
+
+func latlearn_init2( spans_app []string) { // span list should be for LLs (parent spans) not VLLs
     pre :=      "latlearn_init2"
     log.Printf( "%s\n", pre)
 
-    latency_learners = make( map[string]*LatencyLearner)
+    latency_learners = make( map[string]LatencyLearnerI)
 
     // latlearn's built-in benchmark spans
     //     for purposes of comparison with the enduser's reported span metrics
@@ -103,9 +143,25 @@ func (ll *LatencyLearner) before() {
     ll.pair_underway = true
 }
 
+func (vll *VariantLatencyLearner) before() {
+    //log.Printf( "LatencyLearner.before: name %s\n", ll.name)
+
+    vll.parent.t1            = time.Now() // we CAN assume safely that vll.parent != nil
+    vll.parent.pair_underway = true
+
+    vll.t1                   = vll.parent.t1
+    vll.pair_underway        = true
+
+}
+
 func (ll *LatencyLearner) B() {
     // trade-off: since call wrapped with another call, overhead latency impact a tiny bit higher. but gives a smaller code-on-screen footprint at point-of-instrumentation, for dev to parse
     ll.before()
+}
+
+func (vll *VariantLatencyLearner) B() {
+    // trade-off: since call wrapped with another call, overhead latency impact a tiny bit higher. but gives a smaller code-on-screen footprint at point-of-instrumentation, for dev to parse
+    vll.before()
 }
 
 func llB( name string) *LatencyLearner {
@@ -123,12 +179,27 @@ func llB( name string) *LatencyLearner {
     return ll
 }
 
-func (ll *LatencyLearner) after() {
-    //log.Printf("LatencyLearner.after: name %s\n", ll.name)
+func llB2( name string, variant string) *VariantLatencyLearner {
+    //log.Printf( "llB: name %s\n", name)
 
-    // Capture Time After
-    t2  := time.Now()     // time.Time
-    dur := t2.Sub( ll.t1) // time.Duration. int64. of ns. legit/precise?
+    if !init_completed { // allows lazy init of latlearn, upon first call to llB2
+        latlearn_init()
+    }
+
+    ll, found    := latency_learner( name) // example name: "somefn"
+    if !found   { tracked_spans = append( tracked_spans, name)}
+
+    variant_name := fmt.Sprintf( "%s(%s)", name, variant) // example variant_name: "somefn(N=200)"
+    vll, found2  := variant_latency_learner( variant_name)
+    if  !found2 { tracked_spans = append( tracked_spans, variant_name)}
+    vll.parent    = ll // to note this span is a variant of a parent span, and part of a span family
+    vll.before() // the called before fn here will ALSO in effect call ll.before()
+
+    return vll
+}
+
+func (ll *LatencyLearner) after2( dur time.Duration) { // dur is int64. of ns. legit & precise?
+    //log.Printf("LatencyLearner.after: name %s\n", ll.name)
 
     //log.Printf( "%s before: %#v ms\n",         ll.name, ll.t1) // lg num printed is ms beyond the sec
     //log.Printf( "%s after : %#v ms\n",         ll.name, t2)
@@ -150,8 +221,27 @@ func (ll *LatencyLearner) after() {
     ll.pair_ever_completed      = true
 }
 
+func (ll *LatencyLearner) after() {
+    t2  := time.Now()
+    dur := t2.Sub( ll.t1) // time.Duration. int64. of ns. legit & precise?
+
+    ll.after2( dur)
+}
+
+func (vll *VariantLatencyLearner) after() {
+    t2  := time.Now()
+    dur := t2.Sub( vll.t1) // time.Duration. int64. of ns. legit & precise?
+
+    vll.parent.after2(         dur)
+    vll.LatencyLearner.after2( dur)
+}
+
 func (ll *LatencyLearner) A() {
     ll.after()
+}
+
+func (vll *VariantLatencyLearner) A() {
+    vll.after()
 }
 
 func llA( name string) {
@@ -173,11 +263,14 @@ func latency_measure_self_sample() {
 }
 
 func latlearn_measure_overhead_estimate() (overhead time.Duration, exists bool) {
-    if !init_completed         { return -1, false}
+    if !init_completed              { return -1, false}
 
-    ll_noop, found := latency_learners[ "LL.no-op"]
+    lli, found := latency_learners[ "LL.no-op"]
 
-    if !found                       { return -1, false}
+    if  !found                      { return -1, false}
+
+    ll_noop    := lli.getLL()
+
     if !ll_noop.pair_ever_completed { return -1, false}
 
     return ll_noop.min, true

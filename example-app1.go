@@ -19,6 +19,33 @@ func fn2() {
     ll.A()
 }
 
+func fn3( n int) {
+    ll    := llB2( "fn3", fmt.Sprintf( "n=%d", n))
+    v     := 0
+    for i := 0; i < n; i++ {
+        v += (i * 2) // do something here. what matters not. we just wanted to do n iters
+    }
+    ll.A()
+}
+
+func fn4( a int, b int) {
+    ll     := llB2( "fn4", fmt.Sprintf( "a=%d,b=%d", a, b))
+
+    // what we do here exactly does not matter. we only want the total compute to depend on a and b
+    v      := 0
+    as     := []int {}
+    for ai := 0; ai < a; ai++ {
+        as  = append( as, 5)
+    }
+    for bi := 0; bi < b; bi++ {
+        for _, aa := range as {
+            v     += (bi * aa * 2)
+        }
+    }
+
+    ll.A()
+}
+
 func main() {
     // For all the following, we assume latlearn.go is a local file. In your compile path & brought into your own module's namespace. You can look in ./buildrun.sh to see this example app's buildtime and runtime assumptions.
 
@@ -100,4 +127,16 @@ func main() {
     latlearn_should_subtract_overhead = true // this is false by default
     latlearn_report() // in report notice that all the previous reported metrics shrunk
     // Except... for LL.no-op's min. That is the only span and field we EXEMPT from this overhead compensation feature. We exempt it so that it's original value passes thru into the generated report. So you know by *how* much the other reported numbers have shrunk!
+
+    fn3(     1)
+    fn3(    50)
+    fn3( 20000)
+    fn4(    1,   1)
+    fn4(    1, 100)
+    fn4(   10,  20)
+    for i := 0; i < 100; i++ {
+        fn4( 1000,  15)
+    }
+    // in report we gen here, notice added stats for all fn3 & fn4 param variants, tracked separately:
+    latlearn_report()
 }
