@@ -14,6 +14,7 @@ import (
     "io"
     "log"
     "os"
+    "os/exec"
     "runtime"
     "runtime/debug"
     "sort"
@@ -442,6 +443,45 @@ func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead
     to_file( f, line)
 }
 
+func mac_sysctl( key string) (value string) {
+    cmd := exec.Command( "/usr/sbin/sysctl", key)
+
+    var out []byte
+    var err error
+
+    if  out, err = cmd.CombinedOutput(); (err != nil) {
+        //log.Printf( "latearn report's mac sysctl exec failed. output: %s\n", string( out))
+        //log.Fatal( err)
+        return ""
+    }
+    out_str := string( out)
+    value_to_line_end := strings.TrimPrefix( out_str, key + ": ")
+    return strings.TrimSpace( value_to_line_end)
+}
+
+func mac_sysctl_report_line( key string, f *os.File) {
+    value := mac_sysctl( key)
+    line  := fmt.Sprintf( "%-27s: %s\n", key, value)
+    io.WriteString( f, line)
+}
+
+func write_info_about_mac_host_to_report( f *os.File) {
+    mac_sysctl_report_line( "kern.ostype",                 f)
+    mac_sysctl_report_line( "kern.osproductversion",       f)
+    mac_sysctl_report_line( "kern.osrelease",              f)
+    mac_sysctl_report_line( "kern.osrevision",             f)
+    mac_sysctl_report_line( "kern.version",                f)
+    mac_sysctl_report_line( "user.posix2_version",         f)
+    mac_sysctl_report_line( "machdep.cpu.brand_string",    f)
+    mac_sysctl_report_line( "machdep.cpu.core_count",      f)
+    mac_sysctl_report_line( "machdep.cpu.thread_count",    f)
+    mac_sysctl_report_line( "machdep.memmap.Conventional", f)
+    mac_sysctl_report_line( "hw.memsize",                  f)
+    mac_sysctl_report_line( "hw.pagesize",                 f)
+    mac_sysctl_report_line( "hw.cpufrequency",             f)
+    mac_sysctl_report_line( "hw.busfrequency",             f)
+}
+
 func latlearn_report2( params []string) {
     if !init_completed { return}
     pre := "latlearn_report2"
@@ -483,6 +523,10 @@ func latlearn_report2( params []string) {
     gogc := ""
     if val, ok := os.LookupEnv(     "GOGC"); ok {           gogc = val}
     io.WriteString( f, fmt.Sprintf( "GOGC:           %s\n", gogc))
+
+    if (runtime.GOOS == "darwin") {
+        write_info_about_mac_host_to_report( f)
+    }
 
     term_rows  := "?"
     term_cols  := "?"

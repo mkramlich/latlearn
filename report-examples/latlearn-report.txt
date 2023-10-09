@@ -2,7 +2,7 @@ Latency Report (https://github.com/mkramlich/latlearn)
 
 latlearn_should_subtract_overhead: true
 metric treated as overhead: LL.no-op, min
-since LL init: 199,402,684 ns
+since LL init: 409,087,288 ns
 
 Go ver:         go1.20.4
 GOARCH:         amd64
@@ -12,6 +12,20 @@ GOMAXPROCS:     4
 NumGoroutine:   1
 SetMemoryLimit: 9,223,372,036,854,775,807 bytes
 GOGC:           
+kern.ostype                : Darwin
+kern.osproductversion      : 10.15.3
+kern.osrelease             : 19.3.0
+kern.osrevision            : 199506
+kern.version               : Darwin Kernel Version 19.3.0: Fri Jan 10 21:15:49 PST 2020; root:xnu-6153.81.5~4/RELEASE_X86_64
+user.posix2_version        : 200112
+machdep.cpu.brand_string   : Intel(R) Core(TM) i3-1000NG4 CPU @ 1.10GHz
+machdep.cpu.core_count     : 2
+machdep.cpu.thread_count   : 4
+machdep.memmap.Conventional: 8380841984
+hw.memsize                 : 8589934592
+hw.pagesize                : 4096
+hw.cpufrequency            : 1100000000
+hw.busfrequency            : 400000000
 LINES:          ?
 COLUMNS:        ?
 HOST:           
@@ -19,24 +33,24 @@ TERM:           xterm-256color
 
 
 span                 :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac | span                 
-print-yo             :           2,753 |           2,753 |           2,753 |           2,753 | w           1 | tf 0.000014 | print-yo             
-fn1                  :           2,322 |           2,322 |           2,322 |           2,322 | w           1 | tf 0.000012 | fn1                  
-fn2                  :              -1 |               8 |          20,322 |               6 | w     100,234 | tf 0.041471 | fn2                  
-LL.no-op             :              76 |               7 |          71,328 |              10 | w   1,000,000 | tf 0.433066 | LL.no-op             
-LL.span-map-lookup   :              22 |              23 |             439 |              26 | w       1,000 | tf 0.000515 | LL.span-map-lookup   
-LL.add-2-int-literals:               5 |               9 |              70 |              11 | w       1,000 | tf 0.000437 | LL.add-2-int-literals
-LL.add-2-str-literals:               2 |               8 |              53 |               7 | w       1,000 | tf 0.000421 | LL.add-2-str-literals
-LL.sort-10-strs      :             314 |             360 |           6,933 |             367 | w       1,000 | tf 0.002223 | LL.sort-10-strs      
-LL.log-10-hellos     :          34,386 |          34,386 |          34,386 |          34,386 | w           1 | tf 0.000173 | LL.log-10-hellos     
-LL.benchmarks-total  :     175,716,604 |     175,716,604 |     175,716,604 |     175,716,604 | w           1 | tf 0.881215 | LL.benchmarks-total  
-LL.lat-report        :         245,118 |         321,099 |         626,922 |         421,295 | w           7 | tf 0.014792 | LL.lat-report        
-totally-adhoc        :               5 |               5 |              23 |              14 | w           2 | tf 0.000001 | totally-adhoc        
-fn3                  :              39 |           6,288 |           6,288 |           2,131 | w           3 | tf 0.000033 | fn3                  
-fn3(n=1)             :              67 |              67 |              67 |              67 | w           1 | tf 0.000001 | fn3(n=1)             
-fn3(n=50)            :              39 |              39 |              39 |              39 | w           1 | tf 0.000001 | fn3(n=50)            
-fn3(n=20000)         :           6,288 |           6,288 |           6,288 |           6,288 | w           1 | tf 0.000032 | fn3(n=20000)         
-fn4                  :             172 |          13,848 |          70,800 |          18,657 | w         103 | tf 0.009677 | fn4                  
-fn4(a=1,b=1)         :             172 |             172 |             172 |             172 | w           1 | tf 0.000001 | fn4(a=1,b=1)         
-fn4(a=1,b=100)       :             249 |             249 |             249 |             249 | w           1 | tf 0.000002 | fn4(a=1,b=100)       
-fn4(a=10,b=20)       :             741 |             741 |             741 |             741 | w           1 | tf 0.000004 | fn4(a=10,b=20)       
-fn4(a=1000,b=15)     :          12,224 |          13,848 |          70,800 |          19,205 | w         100 | tf 0.009670 | fn4(a=1000,b=15)     
+print-yo             :           1,979 |           1,979 |           1,979 |           1,979 | w           1 | tf 0.000005 | print-yo             
+fn1                  :           2,003 |           2,003 |           2,003 |           2,003 | w           1 | tf 0.000005 | fn1                  
+fn2                  :               0 |               5 |         137,123 |               9 | w     100,234 | tf 0.021478 | fn2                  
+LL.no-op             :              78 |               4 |         326,835 |               8 | w   1,000,000 | tf 0.211445 | LL.no-op             
+LL.span-map-lookup   :              19 |              22 |             195 |              21 | w       1,000 | tf 0.000244 | LL.span-map-lookup   
+LL.add-2-int-literals:               2 |               6 |              41 |               5 | w       1,000 | tf 0.000204 | LL.add-2-int-literals
+LL.add-2-str-literals:               4 |               5 |              53 |               8 | w       1,000 | tf 0.000213 | LL.add-2-str-literals
+LL.sort-10-strs      :             306 |             318 |          15,867 |             382 | w       1,000 | tf 0.001125 | LL.sort-10-strs      
+LL.log-10-hellos     :          39,323 |          39,323 |          39,323 |          39,323 | w           1 | tf 0.000096 | LL.log-10-hellos     
+LL.benchmarks-total  :     177,137,841 |     177,137,841 |     177,137,841 |     177,137,841 | w           1 | tf 0.433008 | LL.benchmarks-total  
+LL.lat-report        :      27,825,679 |      28,400,333 |      31,752,018 |      29,790,418 | w           7 | tf 0.509753 | LL.lat-report        
+totally-adhoc        :              46 |              46 |              49 |              47 | w           2 | tf 0.000001 | totally-adhoc        
+fn3                  :              62 |           6,551 |           6,551 |           2,226 | w           3 | tf 0.000017 | fn3                  
+fn3(n=1)             :              65 |              65 |              65 |              65 | w           1 | tf 0.000000 | fn3(n=1)             
+fn3(n=50)            :              62 |              62 |              62 |              62 | w           1 | tf 0.000000 | fn3(n=50)            
+fn3(n=20000)         :           6,551 |           6,551 |           6,551 |           6,551 | w           1 | tf 0.000016 | fn3(n=20000)         
+fn4                  :             183 |          14,505 |         289,014 |          25,162 | w         103 | tf 0.006355 | fn4                  
+fn4(a=1,b=1)         :             183 |             183 |             183 |             183 | w           1 | tf 0.000001 | fn4(a=1,b=1)         
+fn4(a=1,b=100)       :             215 |             215 |             215 |             215 | w           1 | tf 0.000001 | fn4(a=1,b=100)       
+fn4(a=10,b=20)       :           2,645 |           2,645 |           2,645 |           2,645 | w           1 | tf 0.000007 | fn4(a=10,b=20)       
+fn4(a=1000,b=15)     :          12,009 |          14,505 |         289,014 |          25,886 | w         100 | tf 0.006347 | fn4(a=1000,b=15)     

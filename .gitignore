@@ -1,7 +1,3 @@
 *.swp
 example-app1
-latlearn-report2.txt
-latlearn-report3.txt
-latlearn-report4.txt
-latlearn-report5.txt
-latlearn-report6.txt
+latlearn-report*.txt

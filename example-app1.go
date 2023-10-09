@@ -138,5 +138,6 @@ func main() {
         fn4( 1000,  15)
     }
     // in report we gen here, notice added stats for all fn3 & fn4 param variants, tracked separately:
+    latlearn_report_fpath = "latlearn-report7.txt"
     latlearn_report()
 }
