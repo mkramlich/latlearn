@@ -2,7 +2,7 @@
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 September 21
+//     last rev 2023 October 9
 //
 //     contact: groglogic@gmail.com
 //     project: https://github.com/mkramlich/latlearn
@@ -431,12 +431,12 @@ func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead
             tf_txt        = fmt.Sprintf( "%8f", my_frac)
         }
         line = fmt.Sprintf(
-                   "%-21s: %15s | %15s | %15s | %15s | w %11s | tf %8s | %-21s",
+                   "%-22s: %15s | %15s | %15s | %15s | w %11s | tf %8s | %-21s",
                    ll.name, min_txt, last_txt, max_txt, mean_txt, weight_txt, tf_txt, ll.name)
     } else {
         // min, last, max, mean, weight of mean (# of calls for this span), time fraction (of current time difference since latlearn_init, in/under this span)
         line = fmt.Sprintf(
-                   "%-21s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | %-21s",
+                   "%-22s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | %-21s",
                    ll.name, ll.name)
     }
 
@@ -564,7 +564,7 @@ func latlearn_report2( params []string) {
 
     // write a report entry (to the file) for the latency stats on each tracked span:
     header  := fmt.Sprintf(
-                   "%-21s: %15s | %15s | %15s | %15s | %13s | %11s | %-21s",
+                   "%-22s: %15s | %15s | %15s | %15s | %13s | %11s | %-21s",
                    "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac", "span")
     to_file( f, header)
 

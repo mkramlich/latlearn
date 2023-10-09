@@ -45,7 +45,7 @@ Here's a brief write-up of a real use case where latlearn's instrumentation and 
 
 The Full Story
 
-For more complex examples, features and permutations see `./example-app1.go` and use `./buildrun.sh` to run it.
+For more complex examples, features and permutations see `./example-app{1,2}.go` and use `./buildrun.sh` to build and run them.
 
 Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, from the private/closed-source Slartboz game's source tree. It was homegrown there in order to meet that game's early goals/needs for:
 
@@ -84,5 +84,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2023 September 27
+2023 October 9
 
