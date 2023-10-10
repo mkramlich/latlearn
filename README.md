@@ -24,7 +24,7 @@ ll := llB( "foo")
 foo()
 ll.A()
 latlearn_report()
-// it just wrote a report (on latency stats) into a file at "./latlearn-report.txt"
+// by here, has wrote a latency report into a file on your host at "./latlearn-report.txt"
 ```
 
 Dependencies
@@ -41,11 +41,14 @@ The combination of Total Transparency, Zero Dependencies, and Zero Price may be 
 
 Real Use Cases
 
-Here's a brief write-up of a real use case where latlearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a performance refactor was a success: `./benefits-example.md`
+Here's a brief write-up of a real use case where latlearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a performance refactor was a success: [](./benefits-example.md)
 
 The Full Story
 
-For more complex examples, features and permutations see `./example-app{1,2}.go` and use `./buildrun.sh` to build and run them.
+For more complex examples, features and permutations see these example apps below, and use [](./buildrun.sh) to build and run them:
+
+* [](./example-app1.go)
+* [](./example-app2.go)
 
 Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, from the private/closed-source Slartboz game's source tree. It was homegrown there in order to meet that game's early goals/needs for:
 
@@ -53,7 +56,7 @@ Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, fro
 * benchmark regression tests (for basic QA automation & CI/CD pipelines)
 * engine performance tuning & optimization refactors
 
-To help understand what latlearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at `./report-examples/latency-report.txt` But it is also recommended that you run `./buildrun.sh` and poke around.
+To help understand what latlearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at [](./report-examples/latency-report.txt) But it is also recommended that you run [](./buildrun.sh) and poke around.
 
 The latlearn code is NOT intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
 
@@ -84,5 +87,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2023 October 9
+2023 October 10
 

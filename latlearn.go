@@ -2,7 +2,7 @@
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 October 9
+//     last rev 2023 October 10
 //
 //     contact: groglogic@gmail.com
 //     project: https://github.com/mkramlich/latlearn
@@ -107,7 +107,7 @@ func latlearn_init2( spans_app []string) { // span list should be for LLs (paren
     spans_latlearn_builtin := []string {
         "LL.no-op",              "LL.span-map-lookup", "LL.add-2-int-literals",
         "LL.add-2-str-literals", "LL.sort-10-strs",    "LL.log-10-hellos",
-        "LL.benchmarks-total", "LL.lat-report"}
+        "LL.benchmarks-total",   "LL.lat-report"}
 
     spans       := []string {}
 
@@ -139,7 +139,7 @@ func latlearn_init() {
 func (ll *LatencyLearner) before() {
     //log.Printf( "LatencyLearner.before: name %s\n", ll.name)
 
-    // Capture Time Before
+    // record the time BEFORE span-of-interest begins
     ll.t1            = time.Now() // type is time.Time
     ll.pair_underway = true
 }
@@ -147,12 +147,12 @@ func (ll *LatencyLearner) before() {
 func (vll *VariantLatencyLearner) before() {
     //log.Printf( "LatencyLearner.before: name %s\n", ll.name)
 
+    // record the time BEFORE span-of-interest begins
     vll.parent.t1            = time.Now() // we CAN assume safely that vll.parent != nil
     vll.parent.pair_underway = true
 
     vll.t1                   = vll.parent.t1
     vll.pair_underway        = true
-
 }
 
 func (ll *LatencyLearner) B() {
@@ -199,6 +199,7 @@ func llB2( name string, variant string) *VariantLatencyLearner {
     return vll
 }
 
+// for latlearn's internal use only
 func (ll *LatencyLearner) after2( dur time.Duration) { // dur is int64. of ns. legit & precise?
     //log.Printf("LatencyLearner.after: name %s\n", ll.name)
 
@@ -223,6 +224,7 @@ func (ll *LatencyLearner) after2( dur time.Duration) { // dur is int64. of ns. l
 }
 
 func (ll *LatencyLearner) after() {
+    // record the time AFTER span-of-interest ended
     t2  := time.Now()
     dur := t2.Sub( ll.t1) // time.Duration. int64. of ns. legit & precise?
 
@@ -230,6 +232,7 @@ func (ll *LatencyLearner) after() {
 }
 
 func (vll *VariantLatencyLearner) after() {
+    // record the time AFTER span-of-interest ended
     t2  := time.Now()
     dur := t2.Sub( vll.t1) // time.Duration. int64. of ns. legit & precise?
 
@@ -263,6 +266,7 @@ func latency_measure_self_sample() {
     }
 }
 
+// for latlearn's internal use only
 func latlearn_measure_overhead_estimate() (overhead time.Duration, exists bool) {
     if !init_completed              { return -1, false}
 
@@ -388,6 +392,7 @@ func number_grouped( val int64, sep string) string { // sep value like "," or " 
     return s3
 }
 
+// for latlearn's internal use only
 func overhead_comp( metric_in int64, overhead int64) (metric_out int64) { // "comp" for compensate
     if latlearn_should_subtract_overhead {
         metric_out = (metric_in - overhead)
@@ -397,6 +402,7 @@ func overhead_comp( metric_in int64, overhead int64) (metric_out int64) { // "co
     return metric_out
 }
 
+// for latlearn's internal use only
 func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead time.Duration) { // time.Duration is int64 ns
     line := ""
 
@@ -443,6 +449,7 @@ func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead
     to_file( f, line)
 }
 
+// for latlearn's internal use only
 func mac_sysctl( key string) (value string) {
     cmd := exec.Command( "/usr/sbin/sysctl", key)
 
@@ -459,12 +466,14 @@ func mac_sysctl( key string) (value string) {
     return strings.TrimSpace( value_to_line_end)
 }
 
+// for latlearn's internal use only
 func mac_sysctl_report_line( key string, f *os.File) {
     value := mac_sysctl( key)
     line  := fmt.Sprintf( "%-27s: %s\n", key, value)
     io.WriteString( f, line)
 }
 
+// for latlearn's internal use only
 func write_info_about_mac_host_to_report( f *os.File) {
     mac_sysctl_report_line( "kern.ostype",                 f)
     mac_sysctl_report_line( "kern.osproductversion",       f)
@@ -580,7 +589,6 @@ func latlearn_report2( params []string) {
 
     ll.A()
 }
-
 
 func latlearn_report() {
      latlearn_report2( []string {})
