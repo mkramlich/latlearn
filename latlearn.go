@@ -49,7 +49,7 @@ type LatencyLearnerI interface {
     B()
     A()
 
-    report( *os.File, time.Duration, time.Duration)
+    report( *os.File, string, time.Duration, time.Duration)
 }
 
 func ( ll *LatencyLearner)        getLL()  *LatencyLearner        { return  ll}
@@ -460,7 +460,7 @@ func overhead_comp( metric_in int64, overhead int64) (metric_out int64) { // "co
 }
 
 // for latlearn's internal use only
-func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead time.Duration) { // time.Duration is int64 ns
+func (ll *LatencyLearner) report( f *os.File, name_field string, since_init time.Duration, overhead time.Duration) { // time.Duration is int64 ns
     line := ""
 
     if ll.pair_ever_completed {
@@ -493,14 +493,20 @@ func (ll *LatencyLearner) report( f *os.File, since_init time.Duration, overhead
             my_frac      := float64( cum_ns) / float64( since_init) // float64. fraction
             tf_txt        = fmt.Sprintf( "%8f", my_frac)
         }
-        line = fmt.Sprintf(
-                   "%-31s: %15s | %15s | %15s | %15s | w %11s | tf %8s | %-21s",
-                   ll.name, min_txt, last_txt, max_txt, mean_txt, weight_txt, tf_txt, ll.name)
+
+        rest_fields := "%15s | %15s | %15s | %15s | w %11s | tf %8s | %-21s"
+        format      := name_field + ": " + rest_fields
+        line         = fmt.Sprintf(
+                           format,
+                           ll.name,    min_txt, last_txt, max_txt, mean_txt,
+                           weight_txt, tf_txt,  ll.name)
     } else {
         // min, last, max, mean, weight of mean (# of calls for this span), time fraction (of current time difference since latlearn_init, in/under this span)
-        line = fmt.Sprintf(
-                   "%-31s: ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | %-21s",
-                   ll.name, ll.name)
+        rest_fields := "???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | %-21s"
+        format      := name_field + ": " + rest_fields
+        line         = fmt.Sprintf(
+                           format,
+                           ll.name, ll.name)
     }
 
     to_file( f, line)
@@ -628,10 +634,27 @@ func latlearn_report2( params []string) {
     }
     io.WriteString(     f, "\n")
 
+    longest_name := -1
+    for _, name  := range tracked_spans {
+        n        := len( name)
+        if (longest_name    == -1) {
+            longest_name     = n
+        } else {
+            if (n > longest_name) {
+                longest_name = n
+            }
+        }
+    }
+
+    name_field  := fmt.Sprintf( "%%-%ds", longest_name)
+    rest_fields := "%15s | %15s | %15s | %15s | %13s | %11s | %-21s"
+    format      := name_field + ": " + rest_fields
+
     // write a report entry (to the file) for the latency stats on each tracked span:
-    header  := fmt.Sprintf(
-                   "%-31s: %15s | %15s | %15s | %15s | %13s | %11s | %-21s",
-                   "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)", "weight (B&As)", "time frac", "span")
+    header      := fmt.Sprintf(
+                       format,
+                       "span", "min (ns)", "last (ns)", "max (ns)", "mean (ns)",
+                       "weight (B&As)", "time frac", "span")
     to_file( f, header)
 
     var overhead time.Duration = -1 // this value signals that we have no usable estimate
@@ -641,7 +664,7 @@ func latlearn_report2( params []string) {
 
     for _, span := range tracked_spans {
         if !latlearn_should_report_builtins && strings.HasPrefix( span,"LL.") { continue}
-        latency_learners[ span].report( f, since_init, overhead) // TODO add found-in-map guard
+        latency_learners[ span].report( f, name_field, since_init, overhead) // TODO add found-in-map guard
     }
 
     ll.A()
