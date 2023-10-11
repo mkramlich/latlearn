@@ -112,6 +112,19 @@ func latlearn_init2( spans_app []string) { // span list should be for LLs (paren
         "LL.map-str-int-get(k=100,key99)",
         "LL.span-map-lookup",             "LL.sort-strs(n=10)",       "LL.log-hellos(n=10)",
         "LL.byte-array-make(n=1)",        "LL.byte-array-make(n=1k)", "LL.byte-array-make(n=100k)",
+        "LL.exec-command(mac,sysctl)",
+        "LL.exec-command(mac,pwd)",
+        "LL.exec-command(mac,date)",
+        "LL.exec-command(mac,host)",
+        "LL.exec-command(mac,hostname)",
+        "LL.exec-command(mac,uname)",
+        "LL.exec-command(mac,ls)",
+        "LL.exec-command(mac,df)",
+        "LL.exec-command(mac,kill)",
+        "LL.exec-command(mac,sleep=0.01s)",
+        "LL.exec-command(mac,sleep=0.001s)",
+        "LL.exec-command(mac,sleep=0.0001s)",
+        "LL.exec-command(mac,sh-version)",
         "LL.benchmarks-total",            "LL.lat-report"}
 
     spans       := []string {}
@@ -290,6 +303,19 @@ func latlearn_measure_overhead_estimate() (overhead time.Duration, exists bool) 
 func noop_fn_for_benchmark_calls() {
 }
 
+// for latlearn's internal use only
+func benchmark_exec( name_sub string, exe string, args []string) { // name_sub like "mac,sysctl"
+    for i      := 0; i < 1000; i++ {
+        cmd    := exec.Command( exe, args...)
+        span   := fmt.Sprintf( "LL.exec-command(%s)", name_sub)
+        ll     := llB( span)
+        if err := cmd.Run(); (err != nil) {
+            // TODO call variant of ll.A() method with arg to indicate it failed
+        }
+        ll.A()
+    }
+}
+
 func latlearn_benchmarks() {
     if !init_completed { return} // TODO auto-init, or, return error
 
@@ -403,8 +429,25 @@ func latlearn_benchmarks() {
         ll.A()
     }
 
+    if (runtime.GOOS == "darwin") {
+        benchmark_exec( "mac,sysctl",        "/usr/sbin/sysctl", []string {})
+        benchmark_exec( "mac,pwd",           "/bin/pwd",         []string {})
+        benchmark_exec( "mac,date",          "/bin/date",        []string {})
+        benchmark_exec( "mac,host",          "/usr/bin/host",    []string {})
+        benchmark_exec( "mac,hostname",      "/bin/hostname",    []string {})
+        benchmark_exec( "mac,uname",         "/usr/bin/uname",   []string {})
+        benchmark_exec( "mac,ls",            "/bin/ls",          []string {})
+        benchmark_exec( "mac,df",            "/bin/df",          []string {})
+        benchmark_exec( "mac,kill",          "/bin/kill",        []string {})
+        benchmark_exec( "mac,sleep=0.01s",   "/bin/sleep",       []string {"0.01",})
+        benchmark_exec( "mac,sleep=0.001s",  "/bin/sleep",       []string {"0.001",})
+        benchmark_exec( "mac,sleep=0.0001s", "/bin/sleep",       []string {"0.0001",})
+        benchmark_exec( "mac,sh-version",    "/bin/sh",          []string {"--version",})
+    }
+
     ll_bt.A()
 }
+
 
 func (ll *LatencyLearner) values() ( string, time.Duration, time.Duration, int, time.Duration, time.Duration, bool, bool) {
     return ll.name, ll.latency_last, ll.cumul_latency, ll.weight_of_cumul_latency, ll.min, ll.max, ll.pair_underway, ll.pair_ever_completed
