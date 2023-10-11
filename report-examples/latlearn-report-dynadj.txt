@@ -2,7 +2,7 @@ Latency Report (https://github.com/mkramlich/latlearn)
 
 latlearn_should_subtract_overhead: true
 metric treated as overhead: LL.no-op, min
-since LL init: 7,034,808,749 ns
+since LL init: 6,490,839,921 ns
 
 Go ver:         go1.20.4
 GOARCH:         amd64
@@ -33,21 +33,24 @@ TERM:           xterm-256color
 
 
 span                           :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac | span                 
-LL.no-op                       :              75 |               5 |         341,379 |              10 | w   1,000,000 | tf 0.012118 | LL.no-op             
-LL.fn-call-return              :               3 |               6 |              35 |               7 | w       1,000 | tf 0.000012 | LL.fn-call-return    
-LL.for-iters(n=1000)           :             339 |             346 |             447 |             343 | w       1,000 | tf 0.000059 | LL.for-iters(n=1000) 
-LL.accum-ints(n=1000)          :             348 |             353 |             472 |             354 | w       1,000 | tf 0.000061 | LL.accum-ints(n=1000)
-LL.add-int-literals(n=2)       :               4 |               6 |              35 |               7 | w       1,000 | tf 0.000012 | LL.add-int-literals(n=2)
-LL.add-str-literals(n=2)       :               3 |               5 |              31 |               7 | w       1,000 | tf 0.000012 | LL.add-str-literals(n=2)
-LL.map-str-int-set             :              23 |              27 |             370 |              28 | w       1,000 | tf 0.000015 | LL.map-str-int-set   
-LL.map-str-int-get(k=100,key0) :              16 |              55 |           1,687 |              44 | w       1,000 | tf 0.000017 | LL.map-str-int-get(k=100,key0)
-LL.map-str-int-get(k=100,key49):              16 |              96 |           1,047 |              61 | w       1,000 | tf 0.000019 | LL.map-str-int-get(k=100,key49)
-LL.map-str-int-get(k=100,key99):              18 |              35 |          37,519 |             103 | w       1,000 | tf 0.000025 | LL.map-str-int-get(k=100,key99)
-LL.span-map-lookup             :              13 |              18 |             156 |              18 | w       1,000 | tf 0.000013 | LL.span-map-lookup   
-LL.sort-strs(n=10)             :             312 |             812 |          17,199 |             379 | w       1,000 | tf 0.000065 | LL.sort-strs(n=10)   
-LL.log-hellos(n=10)            :          43,911 |          43,911 |          43,911 |          43,911 | w           1 | tf 0.000006 | LL.log-hellos(n=10)  
-LL.benchmarks-total            :     187,037,610 |     187,037,610 |     187,037,610 |     187,037,610 | w           1 | tf 0.026587 | LL.benchmarks-total  
+LL.no-op                       :              75 |               7 |         102,452 |               9 | w   1,000,000 | tf 0.013020 | LL.no-op             
+LL.fn-call-return              :               3 |               6 |          15,120 |              62 | w       1,000 | tf 0.000021 | LL.fn-call-return    
+LL.for-iters(n=1000)           :             340 |             349 |           9,524 |             355 | w       1,000 | tf 0.000066 | LL.for-iters(n=1000) 
+LL.accum-ints(n=1000)          :             336 |             344 |             392 |             345 | w       1,000 | tf 0.000065 | LL.accum-ints(n=1000)
+LL.add-int-literals(n=2)       :               4 |              13 |         100,260 |             120 | w       1,000 | tf 0.000030 | LL.add-int-literals(n=2)
+LL.add-str-literals(n=2)       :               8 |              12 |             168 |              12 | w       1,000 | tf 0.000013 | LL.add-str-literals(n=2)
+LL.map-str-int-set             :              22 |              26 |             354 |              27 | w       1,000 | tf 0.000016 | LL.map-str-int-set   
+LL.map-str-int-get(k=100,key0) :              14 |              24 |             321 |              32 | w       1,000 | tf 0.000017 | LL.map-str-int-get(k=100,key0)
+LL.map-str-int-get(k=100,key49):              16 |              27 |             174 |              51 | w       1,000 | tf 0.000019 | LL.map-str-int-get(k=100,key49)
+LL.map-str-int-get(k=100,key99):              21 |              64 |             135 |              54 | w       1,000 | tf 0.000020 | LL.map-str-int-get(k=100,key99)
+LL.span-map-lookup             :              16 |              22 |             187 |              21 | w       1,000 | tf 0.000015 | LL.span-map-lookup   
+LL.sort-strs(n=10)             :             304 |             353 |           6,406 |             359 | w       1,000 | tf 0.000067 | LL.sort-strs(n=10)   
+LL.log-hellos(n=10)            :          42,546 |          42,546 |          42,546 |          42,546 | w           1 | tf 0.000007 | LL.log-hellos(n=10)  
+LL.byte-array-make(n=1)        :               3 |              57 |          34,107 |              69 | w       1,000 | tf 0.000022 | LL.byte-array-make(n=1)
+LL.byte-array-make(n=1k)       :               1 |               8 |          16,048 |              60 | w       1,000 | tf 0.000021 | LL.byte-array-make(n=1k)
+LL.byte-array-make(n=100k)     :           3,560 |           4,140 |         209,670 |          10,603 | w       1,000 | tf 0.001645 | LL.byte-array-make(n=100k)
+LL.benchmarks-total            :     197,179,683 |     197,179,683 |     197,179,683 |     197,179,683 | w           1 | tf 0.030378 | LL.benchmarks-total  
 LL.lat-report                  : ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | LL.lat-report        
-loop                           :       1,441,285 |      22,676,231 |     231,981,753 |      85,556,762 | w          80 | tf 0.972954 | loop                 
-loop(dyn_adjust=false)         :      21,053,661 |      96,726,432 |     231,981,753 |     121,203,941 | w          40 | tf 0.689167 | loop(dyn_adjust=false)
-loop(dyn_adjust=true)          :       1,441,285 |      22,676,231 |     209,439,352 |      49,909,584 | w          40 | tf 0.283787 | loop(dyn_adjust=true)
+loop                           :       1,438,089 |      19,732,927 |     209,133,348 |      78,634,859 | w          80 | tf 0.969180 | loop                 
+loop(dyn_adjust=false)         :      17,367,932 |      75,783,660 |     209,133,348 |     106,147,841 | w          40 | tf 0.654140 | loop(dyn_adjust=false)
+loop(dyn_adjust=true)          :       1,438,089 |      19,732,927 |     192,051,878 |      51,121,877 | w          40 | tf 0.315041 | loop(dyn_adjust=true)

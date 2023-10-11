@@ -106,11 +106,12 @@ func latlearn_init2( spans_app []string) { // span list should be for LLs (paren
     //     for purposes of comparison with the enduser's reported span metrics
     spans_latlearn_builtin := []string {
         "LL.no-op",                       "LL.fn-call-return",
-        "LL.for-iters(n=1000)",           "LL.accum-ints(n=1000)", "LL.add-int-literals(n=2)",
+        "LL.for-iters(n=1000)",           "LL.accum-ints(n=1000)",    "LL.add-int-literals(n=2)",
         "LL.add-str-literals(n=2)",       "LL.map-str-int-set",
         "LL.map-str-int-get(k=100,key0)", "LL.map-str-int-get(k=100,key49)",
         "LL.map-str-int-get(k=100,key99)",
-        "LL.span-map-lookup",             "LL.sort-strs(n=10)",    "LL.log-hellos(n=10)",
+        "LL.span-map-lookup",             "LL.sort-strs(n=10)",       "LL.log-hellos(n=10)",
+        "LL.byte-array-make(n=1)",        "LL.byte-array-make(n=1k)", "LL.byte-array-make(n=100k)",
         "LL.benchmarks-total",            "LL.lat-report"}
 
     spans       := []string {}
@@ -384,6 +385,23 @@ func latlearn_benchmarks() {
         log.Printf( "%s: log measure test\n", pre)
     }
     ll.A()
+
+    for i     := 0; i < 1000; i++ {
+        ll    := llB( "LL.byte-array-make(n=1)")
+        array := make( []byte,      1)
+        _      = array // to quiet the compiler
+        ll.A()
+
+        ll     = llB( "LL.byte-array-make(n=1k)")
+        array  = make( []byte,   1000)
+        _      = array // to quiet the compiler
+        ll.A()
+
+        ll     = llB( "LL.byte-array-make(n=100k)")
+        array  = make( []byte, 100000)
+        _      = array // to quiet the compiler
+        ll.A()
+    }
 
     ll_bt.A()
 }

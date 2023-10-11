@@ -2,7 +2,7 @@ Latency Report (https://github.com/mkramlich/latlearn)
 
 latlearn_should_subtract_overhead: true
 metric treated as overhead: LL.no-op, min
-since LL init: 416,476,761 ns
+since LL init: 430,257,570 ns
 
 Go ver:         go1.20.4
 GOARCH:         amd64
@@ -33,31 +33,34 @@ TERM:           xterm-256color
 
 
 span                           :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac | span                 
-print-yo                       :           2,261 |           2,261 |           2,261 |           2,261 | w           1 | tf 0.000006 | print-yo             
-fn1                            :           1,796 |           1,796 |           1,796 |           1,796 | w           1 | tf 0.000004 | fn1                  
-fn2                            :               0 |               9 |          20,574 |               8 | w     100,234 | tf 0.020093 | fn2                  
-LL.no-op                       :              75 |               6 |         241,095 |              12 | w   1,000,000 | tf 0.210162 | LL.no-op             
-LL.fn-call-return              :               3 |               7 |              63 |               8 | w       1,000 | tf 0.000201 | LL.fn-call-return    
-LL.for-iters(n=1000)           :             341 |             343 |           6,875 |             360 | w       1,000 | tf 0.001045 | LL.for-iters(n=1000) 
-LL.accum-ints(n=1000)          :             348 |             354 |             506 |             353 | w       1,000 | tf 0.001029 | LL.accum-ints(n=1000)
-LL.add-int-literals(n=2)       :               4 |               7 |              11 |               7 | w       1,000 | tf 0.000198 | LL.add-int-literals(n=2)
-LL.add-str-literals(n=2)       :               4 |               8 |              35 |               8 | w       1,000 | tf 0.000200 | LL.add-str-literals(n=2)
-LL.map-str-int-set             :              22 |              27 |           2,298 |              29 | w       1,000 | tf 0.000252 | LL.map-str-int-set   
-LL.map-str-int-get(k=100,key0) :              15 |              30 |         227,181 |             256 | w       1,000 | tf 0.000796 | LL.map-str-int-get(k=100,key0)
-LL.map-str-int-get(k=100,key49):              17 |              62 |             280 |              53 | w       1,000 | tf 0.000308 | LL.map-str-int-get(k=100,key49)
-LL.map-str-int-get(k=100,key99):              21 |              51 |          20,375 |              74 | w       1,000 | tf 0.000360 | LL.map-str-int-get(k=100,key99)
-LL.span-map-lookup             :              15 |              17 |           2,518 |              32 | w       1,000 | tf 0.000259 | LL.span-map-lookup   
-LL.sort-strs(n=10)             :             297 |             329 |           5,020 |             340 | w       1,000 | tf 0.000998 | LL.sort-strs(n=10)   
-LL.log-hellos(n=10)            :          41,211 |          41,211 |          41,211 |          41,211 | w           1 | tf 0.000099 | LL.log-hellos(n=10)  
-LL.benchmarks-total            :     189,541,740 |     189,541,740 |     189,541,740 |     189,541,740 | w           1 | tf 0.455108 | LL.benchmarks-total  
-LL.lat-report                  :      26,817,750 |      28,652,184 |      32,283,513 |      29,292,389 | w           7 | tf 0.492338 | LL.lat-report        
-totally-adhoc                  :              37 |              37 |              52 |              44 | w           2 | tf 0.000001 | totally-adhoc        
-fn3                            :              45 |           6,345 |           6,345 |           2,150 | w           3 | tf 0.000016 | fn3                  
-fn3(n=1)                       :              45 |              45 |              45 |              45 | w           1 | tf 0.000000 | fn3(n=1)             
-fn3(n=50)                      :              61 |              61 |              61 |              61 | w           1 | tf 0.000000 | fn3(n=50)            
-fn3(n=20000)                   :           6,345 |           6,345 |           6,345 |           6,345 | w           1 | tf 0.000015 | fn3(n=20000)         
-fn4                            :             170 |          15,148 |         324,775 |          17,490 | w         103 | tf 0.004344 | fn4                  
-fn4(a=1,b=1)                   :             170 |             170 |             170 |             170 | w           1 | tf 0.000001 | fn4(a=1,b=1)         
-fn4(a=1,b=100)                 :             246 |             246 |             246 |             246 | w           1 | tf 0.000001 | fn4(a=1,b=100)       
-fn4(a=10,b=20)                 :           1,644 |           1,644 |           1,644 |           1,644 | w           1 | tf 0.000004 | fn4(a=10,b=20)       
-fn4(a=1000,b=15)               :           8,431 |          15,148 |         324,775 |          17,994 | w         100 | tf 0.004339 | fn4(a=1000,b=15)     
+print-yo                       :           2,268 |           2,268 |           2,268 |           2,268 | w           1 | tf 0.000005 | print-yo             
+fn1                            :           2,159 |           2,159 |           2,159 |           2,159 | w           1 | tf 0.000005 | fn1                  
+fn2                            :               0 |               7 |          27,883 |               8 | w     100,234 | tf 0.019696 | fn2                  
+LL.no-op                       :              76 |               6 |         321,099 |              10 | w   1,000,000 | tf 0.200351 | LL.no-op             
+LL.fn-call-return              :               3 |               7 |              20 |               6 | w       1,000 | tf 0.000192 | LL.fn-call-return    
+LL.for-iters(n=1000)           :             340 |             344 |             473 |             342 | w       1,000 | tf 0.000973 | LL.for-iters(n=1000) 
+LL.accum-ints(n=1000)          :             338 |             342 |             371 |             344 | w       1,000 | tf 0.000976 | LL.accum-ints(n=1000)
+LL.add-int-literals(n=2)       :               2 |               6 |              58 |               7 | w       1,000 | tf 0.000195 | LL.add-int-literals(n=2)
+LL.add-str-literals(n=2)       :               2 |               4 |              59 |               5 | w       1,000 | tf 0.000190 | LL.add-str-literals(n=2)
+LL.map-str-int-set             :              21 |              25 |             357 |              25 | w       1,000 | tf 0.000236 | LL.map-str-int-set   
+LL.map-str-int-get(k=100,key0) :              13 |              56 |             549 |              31 | w       1,000 | tf 0.000249 | LL.map-str-int-get(k=100,key0)
+LL.map-str-int-get(k=100,key49):              20 |             146 |             146 |              54 | w       1,000 | tf 0.000303 | LL.map-str-int-get(k=100,key49)
+LL.map-str-int-get(k=100,key99):              19 |              92 |           7,184 |              63 | w       1,000 | tf 0.000324 | LL.map-str-int-get(k=100,key99)
+LL.span-map-lookup             :              20 |              23 |          32,820 |              87 | w       1,000 | tf 0.000379 | LL.span-map-lookup   
+LL.sort-strs(n=10)             :             335 |             401 |          17,848 |             404 | w       1,000 | tf 0.001116 | LL.sort-strs(n=10)   
+LL.log-hellos(n=10)            :          51,182 |          51,182 |          51,182 |          51,182 | w           1 | tf 0.000119 | LL.log-hellos(n=10)  
+LL.byte-array-make(n=1)        :               2 |              35 |          18,122 |              44 | w       1,000 | tf 0.000281 | LL.byte-array-make(n=1)
+LL.byte-array-make(n=1k)       :               2 |              10 |          14,187 |              62 | w       1,000 | tf 0.000323 | LL.byte-array-make(n=1k)
+LL.byte-array-make(n=100k)     :           3,726 |           4,041 |         249,048 |          12,029 | w       1,000 | tf 0.028137 | LL.byte-array-make(n=100k)
+LL.benchmarks-total            :     201,008,275 |     201,008,275 |     201,008,275 |     201,008,275 | w           1 | tf 0.467181 | LL.benchmarks-total  
+LL.lat-report                  :      27,902,802 |      31,306,122 |      31,306,122 |      29,537,222 | w           7 | tf 0.480552 | LL.lat-report        
+totally-adhoc                  :               8 |               8 |              83 |              45 | w           2 | tf 0.000001 | totally-adhoc        
+fn3                            :              45 |           6,540 |           6,540 |           2,216 | w           3 | tf 0.000016 | fn3                  
+fn3(n=1)                       :              63 |              63 |              63 |              63 | w           1 | tf 0.000000 | fn3(n=1)             
+fn3(n=50)                      :              45 |              45 |              45 |              45 | w           1 | tf 0.000000 | fn3(n=50)            
+fn3(n=20000)                   :           6,540 |           6,540 |           6,540 |           6,540 | w           1 | tf 0.000015 | fn3(n=20000)         
+fn4                            :             179 |          20,285 |         194,729 |          16,426 | w         103 | tf 0.003951 | fn4                  
+fn4(a=1,b=1)                   :             179 |             179 |             179 |             179 | w           1 | tf 0.000001 | fn4(a=1,b=1)         
+fn4(a=1,b=100)                 :             279 |             279 |             279 |             279 | w           1 | tf 0.000001 | fn4(a=1,b=100)       
+fn4(a=10,b=20)                 :           1,722 |           1,722 |           1,722 |           1,722 | w           1 | tf 0.000004 | fn4(a=10,b=20)       
+fn4(a=1000,b=15)               :           8,802 |          20,285 |         194,729 |          16,897 | w         100 | tf 0.003945 | fn4(a=1000,b=15)     
