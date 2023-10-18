@@ -272,13 +272,15 @@ func llA( name string) {
     latency_learners[ name].after() // TODO map found guard
 }
 
-func latency_measure_self_sample() {
+func latency_measure_self_sample( n int) {
     if !init_completed { return} // TODO auto-init, or, return error
 
     // below is to (try to) measure/estimate the latency cost of a latlearn measurement
     // but lots of subtle issues and complexity lurk here
+    if (n < 0) { n = 1_000_000} // we'll do it 1 million times, hoping to mitigate (somewhat, maybe) the effects of host load spikes, GC runs, etc
+
     ll    := latency_learners[ "LL.no-op"]
-    for i := 0; i < 1000000; i++ { // we'll do it 1 million times, hoping to mitigate (somewhat, maybe) the effects of host load spikes, GC runs, etc
+    for i := 0; i < n; i++ {
         ll.before()
         ll.after()
     }
@@ -322,7 +324,7 @@ func latlearn_benchmarks() {
     pre      :=      "latlearn_benchmarks"
     ll_bt    := llB( "LL.benchmarks-total")
 
-    latency_measure_self_sample()
+    latency_measure_self_sample( -1) // defaults to 1M
 
     for i     := 0; i < 1000; i++ {
         ll    := llB( "LL.fn-call-return")
