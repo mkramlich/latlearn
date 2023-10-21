@@ -1,8 +1,8 @@
 Latency Report (https://github.com/mkramlich/latlearn)
 
-latlearn_should_subtract_overhead: true
+Should_subtract_overhead: true
 metric treated as overhead: LL.no-op, min
-since LL init: 59,781,563,120 ns
+since LL init: 63,089,517,013 ns
 
 Go ver:         go1.20.4
 GOARCH:         amd64
@@ -33,37 +33,37 @@ TERM:           xterm-256color
 
 
 span                              :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac | span                 
-LL.no-op                          :              76 |              10 |         317,888 |              10 | w   1,000,000 | tf 0.001445 | LL.no-op             
-LL.fn-call-return                 :               3 |               7 |              37 |               6 | w       1,000 | tf 0.000001 | LL.fn-call-return    
-LL.for-iters(n=1000)              :             336 |             340 |             447 |             340 | w       1,000 | tf 0.000007 | LL.for-iters(n=1000) 
-LL.accum-ints(n=1000)             :             338 |             340 |             360 |             343 | w       1,000 | tf 0.000007 | LL.accum-ints(n=1000)
-LL.add-int-literals(n=2)          :               3 |               6 |              10 |               6 | w       1,000 | tf 0.000001 | LL.add-int-literals(n=2)
-LL.add-str-literals(n=2)          :               5 |               7 |              12 |               8 | w       1,000 | tf 0.000001 | LL.add-str-literals(n=2)
-LL.map-str-int-set                :              21 |              24 |             367 |              25 | w       1,000 | tf 0.000002 | LL.map-str-int-set   
-LL.map-str-int-get(k=100,key0)    :              14 |              20 |             438 |              32 | w       1,000 | tf 0.000002 | LL.map-str-int-get(k=100,key0)
-LL.map-str-int-get(k=100,key49)   :              17 |              60 |             372 |              51 | w       1,000 | tf 0.000002 | LL.map-str-int-get(k=100,key49)
-LL.map-str-int-get(k=100,key99)   :              18 |              61 |             293 |              53 | w       1,000 | tf 0.000002 | LL.map-str-int-get(k=100,key99)
-LL.span-map-lookup                :              12 |              17 |           5,994 |              24 | w       1,000 | tf 0.000002 | LL.span-map-lookup   
-LL.sort-strs(n=10)                :             312 |             349 |           5,741 |             356 | w       1,000 | tf 0.000007 | LL.sort-strs(n=10)   
-LL.log-hellos(n=10)               :          42,805 |          42,805 |          42,805 |          42,805 | w           1 | tf 0.000001 | LL.log-hellos(n=10)  
-LL.byte-array-make(n=1)           :               2 |               6 |          24,042 |             121 | w       1,000 | tf 0.000003 | LL.byte-array-make(n=1)
-LL.byte-array-make(n=1k)          :               2 |               9 |          41,932 |              84 | w       1,000 | tf 0.000003 | LL.byte-array-make(n=1k)
-LL.byte-array-make(n=100k)        :           3,417 |           4,085 |         186,113 |          11,046 | w       1,000 | tf 0.000186 | LL.byte-array-make(n=100k)
-LL.exec-command(mac,sysctl)       :       1,728,032 |       1,853,571 |       3,181,133 |       1,941,722 | w       1,000 | tf 0.032482 | LL.exec-command(mac,sysctl)
-LL.exec-command(mac,pwd)          :       1,729,117 |       1,857,902 |       2,868,521 |       1,931,556 | w       1,000 | tf 0.032312 | LL.exec-command(mac,pwd)
-LL.exec-command(mac,date)         :       2,191,238 |       2,473,714 |       3,781,483 |       2,455,447 | w       1,000 | tf 0.041075 | LL.exec-command(mac,date)
-LL.exec-command(mac,host)         :       6,525,302 |       7,310,525 |      11,564,232 |       7,264,115 | w       1,000 | tf 0.121512 | LL.exec-command(mac,host)
-LL.exec-command(mac,hostname)     :       1,717,741 |       1,763,042 |       2,863,108 |       1,915,925 | w       1,000 | tf 0.032050 | LL.exec-command(mac,hostname)
-LL.exec-command(mac,uname)        :       2,023,545 |       2,410,360 |       4,129,060 |       2,268,853 | w       1,000 | tf 0.037954 | LL.exec-command(mac,uname)
-LL.exec-command(mac,ls)           :       2,250,186 |       3,166,147 |       4,131,174 |       2,493,321 | w       1,000 | tf 0.041708 | LL.exec-command(mac,ls)
-LL.exec-command(mac,df)           :       1,756,183 |       1,828,843 |       3,381,238 |       1,986,630 | w       1,000 | tf 0.033233 | LL.exec-command(mac,df)
-LL.exec-command(mac,kill)         :       1,700,436 |       1,831,286 |       2,803,040 |       1,894,736 | w       1,000 | tf 0.031696 | LL.exec-command(mac,kill)
-LL.exec-command(mac,sleep=0.01s)  :      14,437,606 |      17,751,523 |      38,213,787 |      17,357,075 | w       1,000 | tf 0.290343 | LL.exec-command(mac,sleep=0.01s)
-LL.exec-command(mac,sleep=0.001s) :       4,087,224 |       5,614,967 |       7,716,514 |       5,292,690 | w       1,000 | tf 0.088535 | LL.exec-command(mac,sleep=0.001s)
-LL.exec-command(mac,sleep=0.0001s):       1,858,479 |       1,985,560 |       4,264,365 |       2,105,421 | w       1,000 | tf 0.035220 | LL.exec-command(mac,sleep=0.0001s)
-LL.exec-command(mac,sh-version)   :       3,226,440 |       3,933,722 |       6,445,384 |       3,531,649 | w       1,000 | tf 0.059077 | LL.exec-command(mac,sh-version)
-LL.benchmarks-total               :  53,077,366,623 |  53,077,366,623 |  53,077,366,623 |  53,077,366,623 | w           1 | tf 0.887855 | LL.benchmarks-total  
+LL.no-op                          :              96 |              10 |         152,368 |              13 | w   1,000,000 | tf 0.001736 | LL.no-op             
+LL.fn-call-return                 :               6 |              10 |              70 |              10 | w       1,000 | tf 0.000002 | LL.fn-call-return    
+LL.for-iters(n=1000)              :             460 |             465 |           6,972 |             470 | w       1,000 | tf 0.000009 | LL.for-iters(n=1000) 
+LL.accum-ints(n=1000)             :             440 |             447 |             468 |             446 | w       1,000 | tf 0.000009 | LL.accum-ints(n=1000)
+LL.add-int-literals(n=2)          :               9 |              14 |              33 |              11 | w       1,000 | tf 0.000002 | LL.add-int-literals(n=2)
+LL.add-str-literals(n=2)          :              10 |              13 |              17 |              13 | w       1,000 | tf 0.000002 | LL.add-str-literals(n=2)
+LL.map-str-int-set                :              31 |              34 |             486 |              35 | w       1,000 | tf 0.000002 | LL.map-str-int-set   
+LL.map-str-int-get(k=100,key0)    :              27 |              33 |          19,055 |              70 | w       1,000 | tf 0.000003 | LL.map-str-int-get(k=100,key0)
+LL.map-str-int-get(k=100,key49)   :              24 |              64 |           2,099 |              78 | w       1,000 | tf 0.000003 | LL.map-str-int-get(k=100,key49)
+LL.map-str-int-get(k=100,key99)   :              34 |              70 |             385 |              78 | w       1,000 | tf 0.000003 | LL.map-str-int-get(k=100,key99)
+LL.span-map-lookup                :              22 |              23 |           7,335 |              33 | w       1,000 | tf 0.000002 | LL.span-map-lookup   
+LL.sort-strs(n=10)                :             392 |             421 |          12,547 |             489 | w       1,000 | tf 0.000009 | LL.sort-strs(n=10)   
+LL.log-hellos(n=10)               :          52,501 |          52,501 |          52,501 |          52,501 | w           1 | tf 0.000001 | LL.log-hellos(n=10)  
+LL.byte-array-make(n=1)           :               2 |              32 |          23,139 |              54 | w       1,000 | tf 0.000002 | LL.byte-array-make(n=1)
+LL.byte-array-make(n=1k)          :               2 |               8 |          57,381 |             122 | w       1,000 | tf 0.000003 | LL.byte-array-make(n=1k)
+LL.byte-array-make(n=100k)        :           4,606 |           4,880 |         464,236 |          12,055 | w       1,000 | tf 0.000193 | LL.byte-array-make(n=100k)
+LL.exec-command(mac,sysctl)       :       2,087,906 |       2,504,831 |       3,719,520 |       2,386,691 | w       1,000 | tf 0.037832 | LL.exec-command(mac,sysctl)
+LL.exec-command(mac,pwd)          :       2,144,387 |       3,247,084 |       4,354,062 |       2,473,028 | w       1,000 | tf 0.039200 | LL.exec-command(mac,pwd)
+LL.exec-command(mac,date)         :       2,845,012 |       3,244,227 |       5,127,101 |       3,207,442 | w       1,000 | tf 0.050841 | LL.exec-command(mac,date)
+LL.exec-command(mac,host)         :       7,587,112 |       9,943,442 |      12,630,621 |       9,046,398 | w       1,000 | tf 0.143391 | LL.exec-command(mac,host)
+LL.exec-command(mac,hostname)     :       2,196,364 |       2,364,310 |       5,997,979 |       2,509,900 | w       1,000 | tf 0.039785 | LL.exec-command(mac,hostname)
+LL.exec-command(mac,uname)        :       2,598,567 |       2,676,692 |       6,389,599 |       2,964,579 | w       1,000 | tf 0.046992 | LL.exec-command(mac,uname)
+LL.exec-command(mac,ls)           :       2,879,807 |       4,053,832 |       5,176,614 |       3,250,291 | w       1,000 | tf 0.051520 | LL.exec-command(mac,ls)
+LL.exec-command(mac,df)           :       2,236,323 |       2,323,104 |       4,030,856 |       2,524,287 | w       1,000 | tf 0.040013 | LL.exec-command(mac,df)
+LL.exec-command(mac,kill)         :       2,161,109 |       2,378,328 |       3,907,477 |       2,464,466 | w       1,000 | tf 0.039065 | LL.exec-command(mac,kill)
+LL.exec-command(mac,sleep=0.01s)  :      12,403,051 |      13,613,446 |      16,229,220 |      14,511,656 | w       1,000 | tf 0.230018 | LL.exec-command(mac,sleep=0.01s)
+LL.exec-command(mac,sleep=0.001s) :       3,170,079 |       3,620,629 |       5,319,424 |       3,634,413 | w       1,000 | tf 0.057609 | LL.exec-command(mac,sleep=0.001s)
+LL.exec-command(mac,sleep=0.0001s):       2,193,173 |       3,292,661 |       4,021,253 |       2,507,062 | w       1,000 | tf 0.039740 | LL.exec-command(mac,sleep=0.0001s)
+LL.exec-command(mac,sh-version)   :       3,987,954 |       4,381,113 |       7,616,515 |       4,502,419 | w       1,000 | tf 0.071367 | LL.exec-command(mac,sh-version)
+LL.benchmarks-total               :  56,681,697,258 |  56,681,697,258 |  56,681,697,258 |  56,681,697,258 | w           1 | tf 0.898433 | LL.benchmarks-total  
 LL.lat-report                     : ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | LL.lat-report        
-loop                              :       2,838,035 |      38,605,726 |     209,271,182 |      83,769,916 | w          80 | tf 0.112101 | loop                 
-loop(dyn_adjust=false)            :      20,309,732 |     107,201,617 |     209,271,182 |     118,346,180 | w          40 | tf 0.079186 | loop(dyn_adjust=false)
-loop(dyn_adjust=true)             :       2,838,035 |      38,605,726 |     198,816,965 |      49,193,652 | w          40 | tf 0.032916 | loop(dyn_adjust=true)
+loop                              :       1,281,976 |       7,532,304 |     209,867,558 |      80,074,976 | w          80 | tf 0.101538 | loop                 
+loop(dyn_adjust=false)            :      22,548,492 |     209,867,558 |     209,867,558 |     109,905,314 | w          40 | tf 0.069682 | loop(dyn_adjust=false)
+loop(dyn_adjust=true)             :       1,281,976 |       7,532,304 |     188,120,410 |      50,244,638 | w          40 | tf 0.031856 | loop(dyn_adjust=true)

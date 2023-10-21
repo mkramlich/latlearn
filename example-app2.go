@@ -7,6 +7,8 @@ import (
     "fmt"
     "math/rand"
     "time"
+
+    "./latlearn"
 )
 
 func needed_tasks() {
@@ -20,18 +22,18 @@ func optional_tasks() {
 }
 
 func should_do_optional_tasks( span string) bool {
-    lli, found := latency_learners[ span]
+    lli, found := latlearn.Learners[ span]
 
     if  !found                 { return true}
 
     // By here we don't know if lli points at a LatencyLearner or a
     // VariantLatencyLearner. However they do both contain an LL instance, so
     // lets grab that and use it below:
-    ll := lli.getLL()
+    ll := lli.GetLL()
 
-    if !ll.pair_ever_completed { return true}
+    if !ll.Pair_ever_completed { return true}
 
-    loop_latency_mean, weight := ll.mean_latency() // mean value returned is int64 of ns
+    loop_latency_mean, weight := ll.Mean() // mean value returned is int64 of ns
 
     // The case we guard for here SHOULD never happen. Only to be rigorous:
     if (weight < 1)            { return true}
@@ -50,11 +52,11 @@ func engine_loop( dyn_adjust bool) {
     fmt.Printf( "engine_loop: %s\n", ll_variant)
 
     for  i := 0; i < 40; i++ {
-        ll := llB2( "loop", ll_variant)
+        ll := latlearn.B2( "loop", ll_variant)
 
         needed_tasks()
 
-        if (!dyn_adjust || (dyn_adjust && should_do_optional_tasks( ll.name))) {
+        if (!dyn_adjust || (dyn_adjust && should_do_optional_tasks( ll.Name))) {
             fmt.Printf("%2d: WILL do optional_tasks\n", i)
             optional_tasks()
         } else {
@@ -75,21 +77,21 @@ func main() {
     // IF/WHEN the overall "engine" loop latency begins to trend too high.
 
     // We call init here so its latency cost not incurred while inside engine_loop.
-    latlearn_init()
+    latlearn.Init()
 
     // We do benchmarks here mainly because we'd like the LL.no-op min metric
     // to be populated (and with a reasonable value to use), so that we can take
     // advantage of the "subtract_overhead" feature later on, during report gen.
-    latlearn_benchmarks()
+    latlearn.Benchmarks()
 
     engine_loop( false) // WITHOUT enablement of dynamic adjustments to maintain QoS
     engine_loop( true)  // WITH it
 
-    latlearn_report_fpath             = "latlearn-report-dynadj.txt"
-    latlearn_should_report_builtins   = true
-    latlearn_should_subtract_overhead = true
+    latlearn.Report_fpath             = "latlearn-report-dynadj.txt"
+    latlearn.Should_report_builtins   = true
+    latlearn.Should_subtract_overhead = true
 
-    latlearn_report()
+    latlearn.Report()
 
     // Now look at the report generated. Compare the diff in UX/QoS delivered
     // between cases when using a (latlearn-based) "dynamic adjustment" strategy,

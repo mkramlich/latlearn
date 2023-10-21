@@ -1,4 +1,4 @@
 #!/bin/sh
 
-cp ./latlearn.go ~/projects/mine/Slartboz/priv/
+cp ./latlearn/latlearn.go ~/projects/mine/Slartboz/priv/latlearn/
 

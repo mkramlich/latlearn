@@ -10,7 +10,7 @@ To see an ultra short (7 second!) video of what latlearn can do, here's a link t
 
 For each span you instrument, latlearn will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
 
-It supports both "expected" spans -- ones mainly where you care about having a stable ordering of them when printed in the report. As well as "ad hoc" spans. You can also choose to do either an "eager init" of latlearn, or a lazy init. A lazy init happens if you call llB() before having previously made an explicit call to init latlearn. In that case, latlearn will init itself (prepare it's internal state as needed) for you, under the hood.
+It supports both "expected" spans -- ones mainly where you care about having a stable ordering of them when printed in the report. As well as "ad hoc" spans. You can also choose to do either an "eager init" of latlearn, or a lazy init. A lazy init happens if you call B() before having previously made an explicit call to init latlearn. In that case, latlearn will init itself (prepare it's internal state as needed) for you, under the hood.
 
 Latlearn also tracks the cost of its own measurements and reporting. And includes a few built-in benchmarked tasks, to help the user quickly make an apples-to-apples comparison, in their mind, when trying to interpret the meaning of the numbers they are seeing in their own latency reports. This also helps when comparing results ran on different machines with possibly wildly different hardware capabilities or external dependencies (network stacks, env conditions, persistance backends, etc.) All of latlearn's built-in measurements have a "LL." as the prefix of the span name.
 
@@ -20,10 +20,10 @@ Since latlearn makes an effort to deduce it's own measurement overhead cost it g
 
 Simplest Example:
 ```
-ll := llB( "foo")
+ll := latlearn.B( "foo")
 foo()
 ll.A()
-latlearn_report()
+latlearn.Report()
 // by here, has wrote a latency report into a file on your host at "./latlearn-report.txt"
 ```
 
@@ -87,5 +87,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2023 October 17
+2023 October 21
 

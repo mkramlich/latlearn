@@ -5,22 +5,24 @@ package main
 
 import (
     "fmt"
+
+    "./latlearn"
 )
 
 func fn1() {
     span :=      "fn1"
-    ll   := llB( span)
+    ll   := latlearn.B( span)
     fmt.Printf(  "%s\n", span)
     ll.A()
 }
 
 func fn2() {
-    ll := llB(  "fn2")
+    ll := latlearn.B(  "fn2")
     ll.A()
 }
 
 func fn3( n int) {
-    ll    := llB2( "fn3", fmt.Sprintf( "n=%d", n))
+    ll    := latlearn.B2( "fn3", fmt.Sprintf( "n=%d", n))
     v     := 0
     for i := 0; i < n; i++ {
         v += (i * 2) // do something here. what matters not. we just wanted to do n iters
@@ -29,7 +31,7 @@ func fn3( n int) {
 }
 
 func fn4( a int, b int) {
-    ll     := llB2( "fn4", fmt.Sprintf( "a=%d,b=%d", a, b))
+    ll     := latlearn.B2( "fn4", fmt.Sprintf( "a=%d,b=%d", a, b))
 
     // what we do here exactly does not matter. we only want the total compute to depend on a and b
     v      := 0
@@ -49,21 +51,21 @@ func fn4( a int, b int) {
 func main() {
     // For all the following, we assume latlearn.go is a local file. In your compile path & brought into your own module's namespace. You can look in ./buildrun.sh to see this example app's buildtime and runtime assumptions.
 
-    latlearn_init2( []string { "print-yo", "fn1", "fn2"}) // spans of yours it should expect. in report order
+    latlearn.Init2( []string { "print-yo", "fn1", "fn2"}) // spans of yours it should expect. in report order
 
-    ll := llB(  "print-yo")
+    ll := latlearn.B(  "print-yo")
     fmt.Printf( "yo\n")
     ll.A()
 
     fn1()
 
     // let's print a basic report:
-    latlearn_report()
+    latlearn.Report()
 
     // We might want to include some context params in our report. If so, give the report generating function a list of strings. A context parameter might be some fact or metadata that the audience would feel is relevant, especially to make a correct interpretation of the metrics, and a correct deduction about their own next course of action.
 
     params := []string { "ver=1.2", "commit=whatever", "N=2", "cores=2"}
-    latlearn_report2( params)
+    latlearn.Report2( params)
 
     // It just wrote a report (on latency stats) into a file at "./latlearn-report.txt"
 
@@ -71,14 +73,14 @@ func main() {
     // because they were not performed. They are purely optional.
 
     // If you wish to perform them do this:
-    latlearn_benchmarks()
+    latlearn.Benchmarks()
 
     // Now let's write a new report. but let us put it in a different file
 
     // To change the report's file path, do like:
-    latlearn_report_fpath = "latlearn-report2.txt"
+    latlearn.Report_fpath = "latlearn-report2.txt"
     // There were no changes to any context param. we just want to see the benchmark metrics which should now appear in the report:
-    latlearn_report2( params)
+    latlearn.Report2( params)
 
     // NOTE: All of LL's built-in spans (like for benchmarks) have names starting with "LL."
     // By the way, latlearn also measures the latency of its own report generation. It names that span "LL.lat-report"
@@ -90,23 +92,23 @@ func main() {
 
     // The below may start to feel a little verbose (boilerplatey) but we express it like this to reinforce that you can continually adjust the report params and file path as you go. which is helpful for testing, and for doing comparisons while doing troubleshooting or tuning work
 
-    latlearn_report_fpath = "latlearn-report3.txt"
-    latlearn_report2( params)
+    latlearn.Report_fpath = "latlearn-report3.txt"
+    latlearn.Report2( params)
 
     // In this report you'll see metrics for fn2 reported for the first time.
     // Note that fn2's AVG latency is (almost certaily) smaller (faster) than fn1. That is because its code body is similar, except it lacks any Printf call. Typically, turning off any output writes (esp to log files) yields a significant reduction in latency (on a typical machine, ayway.) Though in this case fn2 contributes to much more of the program's overall total run latency, measured from process start to end. Because, unlike fn1, it was called 100,234 times.
 
     for i := 0; i < 2; i++ {
-        ll = llB(  "totally-adhoc") // this was not in the initial set of tracked_spans
+        ll = latlearn.B(  "totally-adhoc") // this was not in the initial set of tracked_spans
         // but this ad hoc span measurement will work correctly, anyway
         ll.A()
     }
-    latlearn_report_fpath = "latlearn-report4.txt"
-    latlearn_report() // next time you gen any report, that span will be added to end
+    latlearn.Report_fpath = "latlearn-report4.txt"
+    latlearn.Report() // next time you gen any report, that span will be added to end
 
-    latlearn_report_fpath = "latlearn-report5.txt"
-    latlearn_should_report_builtins = false
-    latlearn_report() // this report will NOT include any of latlearn's built-in spans
+    latlearn.Report_fpath = "latlearn-report5.txt"
+    latlearn.Should_report_builtins = false
+    latlearn.Report() // this report will NOT include any of latlearn's built-in spans
 
     // Now let's make a report where lastlearn will try to subtract the measuring cost
     // from all reported span metrics. It is only a "good faith" effort. An estimate or
@@ -122,10 +124,10 @@ func main() {
     // to make a reasonable estimate of the latency costs that were imposed/experienced
     // by latlearn, itself.
 
-    latlearn_report_fpath = "latlearn-report6.txt"
-    latlearn_should_report_builtins   = true
-    latlearn_should_subtract_overhead = true // this is false by default
-    latlearn_report() // in report notice that all the previous reported metrics shrunk
+    latlearn.Report_fpath = "latlearn-report6.txt"
+    latlearn.Should_report_builtins   = true
+    latlearn.Should_subtract_overhead = true // this is false by default
+    latlearn.Report() // in report notice that all the previous reported metrics shrunk
     // Except... for LL.no-op's min. That is the only span and field we EXEMPT from this overhead compensation feature. We exempt it so that it's original value passes thru into the generated report. So you know by *how* much the other reported numbers have shrunk!
 
     fn3(     1)
@@ -138,6 +140,6 @@ func main() {
         fn4( 1000,  15)
     }
     // in report we gen here, notice added stats for all fn3 & fn4 param variants, tracked separately:
-    latlearn_report_fpath = "latlearn-report7.txt"
-    latlearn_report()
+    latlearn.Report_fpath = "latlearn-report7.txt"
+    latlearn.Report()
 }
