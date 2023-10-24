@@ -1,22 +1,22 @@
-latlearn (aka latlearn.go, LatencyLearner, or LL)
+LatLearn (aka LL, LatencyLearner or latlearn.go)
     by Mike Kramlich
 
-https://github.com/mkramlich/latlearn
+https://github.com/mkramlich/LatLearn
 
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
 
-To see an ultra short (7 second!) video of what latlearn can do, here's a link to a screencast clip on YouTube, of a report file `watch` session:
+To see an ultra short (7 second!) video of what LatLearn can do, here's a link to a screencast clip on YouTube, of a report file `watch` session:
     https://youtu.be/H5EojV3vlYc
 
-For each span you instrument, latlearn will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since latlearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
+For each span you instrument, LatLearn will determine the minimum latency ever observed for it, and the maximum, the mean, and it will remember the last value observed as well. It can report all these PLUS the "weight" of that mean (essentially, the number of completed before()/after() pairs), as well as the "time fraction" spent in/under that span, since LatLearn was initialized. All latencies are measured and reported, explicitly, in nanoseconds.
 
-It supports both "expected" spans -- ones mainly where you care about having a stable ordering of them when printed in the report. As well as "ad hoc" spans. You can also choose to do either an "eager init" of latlearn, or a lazy init. A lazy init happens if you call B() before having previously made an explicit call to init latlearn. In that case, latlearn will init itself (prepare it's internal state as needed) for you, under the hood.
+It supports both "expected" spans -- ones mainly where you care about having a stable ordering of them when printed in the report. As well as "ad hoc" spans. You can specify the expected span names during init. You *must* explicitly make a call to initialize LatLearn *before* your app begins exercising its instrumentation, or requesting any reports, etc.
 
-Latlearn also tracks the cost of its own measurements and reporting. And includes a few built-in benchmarked tasks, to help the user quickly make an apples-to-apples comparison, in their mind, when trying to interpret the meaning of the numbers they are seeing in their own latency reports. This also helps when comparing results ran on different machines with possibly wildly different hardware capabilities or external dependencies (network stacks, env conditions, persistance backends, etc.) All of latlearn's built-in measurements have a "LL." as the prefix of the span name.
+LatLearn also tracks the cost of its own measurements and reporting. And includes a few built-in benchmarked tasks, to help the user quickly make an apples-to-apples comparison, in their mind, when trying to interpret the meaning of the numbers they are seeing in their own latency reports. This also helps when comparing results ran on different machines with possibly wildly different hardware capabilities or external dependencies (network stacks, env conditions, persistance backends, etc.) All of LatLearn's built-in measurements have a "LL." as the prefix of the span name.
 
-The act of taking a measurement (and stuffing it somewhere) has a cost. In compute and therefore in latency. Though this codebase is young (and relatively NOT optimized, so far) we DO make an attempt to write reasonably efficient code. So as to impose the minimum "overhead" cost from the act of measuring itself. On an older, low-end Apple laptop (by the standards of 2023), the author has consistently seen an overhead cost of around 76 nanoseconds. Per application span (per completed pair of before() and after()) being measured. When using latlearn. We make a best faith effort to devise a reasonable number for this. Currently, we use the "LL.no-op" span's metrics for it. And it's minimum observed value, in any given run session. Obviously the actual overhead cost, in time, will vary by your host hardware, etc.
+The act of taking a measurement (and stuffing it somewhere) has a cost. In compute and therefore in latency. Though this codebase is young (and relatively NOT optimized, so far) we DO make an attempt to write reasonably efficient code. So as to impose the minimum "overhead" cost from the act of measuring itself. On an older, low-end Apple laptop (by the standards of 2023), the author has consistently seen an overhead cost of around 76 nanoseconds. Per application span (per completed pair of before() and after()) being measured. When using LatLearn. We make a best faith effort to devise a reasonable number for this. Currently, we use the "LL.no-op" span's metrics for it. And it's minimum observed value, in any given run session. Obviously the actual overhead cost, in time, will vary by your host hardware, etc.
 
-Since latlearn makes an effort to deduce it's own measurement overhead cost it goes one step further to deliver an extra feature. Though it is purely optional. If you toggle the latlearn variable named "latlearn_should_subtract_overhead" to true then in all subsequent reports it will automatically subtract out the believed overhead cost, from all the reported latencies (to be clear: for every span's min, last, max and mean.) It does exempt, however, ONE span and stat permutation. It exempts LL.no-op's "min" field value from this auto-compensation logic. The reason why is so we *always* let LL.no-op min's value pass through, unchanged, into the report. So you can better judge the impact it had, especially when automatic overhead subtraction is happening for all the other values shown. If LL.no-op's "last" appears higher than it's "min" then that is why!
+Since LatLearn makes an effort to deduce it's own measurement overhead cost it goes one step further to deliver an extra feature. Though it is purely optional. If you toggle the LatLearn variable named "Should_subtract_overhead" to true then in all subsequent reports it will automatically subtract out the believed overhead cost, from all the reported latencies (to be clear: for every span's min, last, max and mean.) It does exempt, however, ONE span and stat permutation. It exempts LL.no-op's "min" field value from this auto-compensation logic. The reason why is so we *always* let LL.no-op min's value pass through, unchanged, into the report. So you can better judge the impact it had, especially when automatic overhead subtraction is happening for all the other values shown. If LL.no-op's "last" appears higher than it's "min" then that is why!
 
 Simplest Example:
 ```
@@ -39,9 +39,13 @@ There are no opaque binaries or external service dependencies. There is no "phon
 
 The combination of Total Transparency, Zero Dependencies, and Zero Price may be attractive for some devs or teams looking for an alternative to big/heavy/murky commercial packages or cloud services in this problem space. I won't name names but if I coughed and my cough sounded to you like "AtaOgd" or "Ew Relicked" or "Plunks" I'd say you were *fantastically* good at spelling the sounds of a cough! And then I would look at you funny, and slowly back away, all casual like.
 
+Concurrency & Thread/Memory Safety
+
+LatLearn is safe for use by processes running multiple goroutines, each with code paths instrumented via LatLearn. See [./latlearn/latlearn.go](./latlearn/latlearn.go) and [./example-app3.go](./example-app3.go) for more detail on exactly how and why.
+
 Real Use Cases
 
-Here's a brief write-up of a real use case where latlearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a performance refactor was a success: [./benefits-example.md](./benefits-example.md)
+Here's a brief write-up of a real use case where LatLearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a performance refactor was a success: [./benefits-example.md](./benefits-example.md)
 
 The Full Story
 
@@ -49,6 +53,7 @@ For more complex examples, features and permutations see these example apps belo
 
 * [./example-app1.go](./example-app1.go)
 * [./example-app2.go](./example-app2.go)
+* [./example-app3.go](./example-app3.go)
 
 Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, from the private/closed-source Slartboz game's source tree. It was homegrown there in order to meet that game's early goals/needs for:
 
@@ -56,9 +61,9 @@ Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, fro
 * benchmark regression tests (for basic QA automation & CI/CD pipelines)
 * engine performance tuning & optimization refactors
 
-To help understand what latlearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at [./report-examples/latlearn-report.txt](./report-examples/latlearn-report.txt). But it is also recommended that you run [./buildrun.sh](./buildrun.sh) and poke around.
+To help understand what LatLearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at [./report-examples/latlearn-report.txt](./report-examples/latlearn-report.txt). But it is also recommended that you run [./buildrun.sh](./buildrun.sh) and poke around.
 
-The latlearn code is NOT intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
+The LatLearn code is NOT intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
 
 There is MUCH more to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's a long list of in-house ideas for further enhancement.
 
@@ -87,5 +92,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2023 October 21
+2023 October 24
 

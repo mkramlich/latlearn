@@ -1,16 +1,25 @@
 Latency Report (https://github.com/mkramlich/latlearn)
 
-Should_subtract_overhead: false
-since LL init: 54,554,076,770 ns
+Outer_queue_capacity:        1000000
+Inner_queue_capacity:        50
+Overhead_samples_started:    true
+Overhead_samples_finished:   true
+Overhead_samples_aborted:    false
+Benchmarks_started:          true
+Benchmarks_finished:         true
+Should_report_builtins:      true
+Should_subtract_overhead:    true
+metric treated as overhead:  LL.no-op, min
+since LL init:               62,863,418,151 ns
 
-Go ver:         go1.20.4
-GOARCH:         amd64
-GOOS:           darwin
-NumCPU:         4
-GOMAXPROCS:     4
-NumGoroutine:   1
-SetMemoryLimit: 9,223,372,036,854,775,807 bytes
-GOGC:           
+Go ver:                      go1.20.4
+GOARCH:                      amd64
+GOOS:                        darwin
+NumCPU:                      4
+GOMAXPROCS:                  4
+NumGoroutine:                2
+SetMemoryLimit:              9,223,372,036,854,775,807 bytes
+GOGC:                        
 kern.ostype                : Darwin
 kern.osproductversion      : 10.15.3
 kern.osrelease             : 19.3.0
@@ -25,45 +34,54 @@ hw.memsize                 : 8589934592
 hw.pagesize                : 4096
 hw.cpufrequency            : 1100000000
 hw.busfrequency            : 400000000
-LINES:          ?
-COLUMNS:        ?
-HOST:           
-TERM:           xterm-256color
+LINES:                       ?
+COLUMNS:                     ?
+HOST:                        
+TERM:                        xterm-256color
 
-ver=1.2, commit=whatever, N=2, cores=2
 
 span                              :        min (ns) |       last (ns) |        max (ns) |       mean (ns) | weight (B&As) |   time frac | span                 
-print-yo                          :           4,788 |           4,788 |           4,788 |           4,788 | w           1 | tf 0.000000 | print-yo             
-fn1                               :           2,989 |           2,989 |           2,989 |           2,989 | w           1 | tf 0.000000 | fn1                  
-fn2                               : ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | ???,???,???,??? | w ???,???,??? | tf ???????? | fn2                  
-LL.no-op                          :              87 |             100 |         132,113 |             102 | w   1,000,000 | tf 0.001886 | LL.no-op             
-LL.fn-call-return                 :              95 |              99 |             325 |             100 | w       1,000 | tf 0.000002 | LL.fn-call-return    
-LL.for-iters(n=1000)              :             493 |             499 |             634 |             497 | w       1,000 | tf 0.000009 | LL.for-iters(n=1000) 
-LL.accum-ints(n=1000)             :             493 |             499 |             531 |             498 | w       1,000 | tf 0.000009 | LL.accum-ints(n=1000)
-LL.add-int-literals(n=2)          :              95 |              98 |          43,294 |             147 | w       1,000 | tf 0.000003 | LL.add-int-literals(n=2)
-LL.add-str-literals(n=2)          :              95 |              98 |             132 |              98 | w       1,000 | tf 0.000002 | LL.add-str-literals(n=2)
-LL.map-str-int-set                :             116 |             118 |             503 |             121 | w       1,000 | tf 0.000002 | LL.map-str-int-set   
-LL.map-str-int-get(k=100,key0)    :             104 |             153 |             587 |             130 | w       1,000 | tf 0.000002 | LL.map-str-int-get(k=100,key0)
-LL.map-str-int-get(k=100,key49)   :             109 |             137 |          17,908 |             178 | w       1,000 | tf 0.000003 | LL.map-str-int-get(k=100,key49)
-LL.map-str-int-get(k=100,key99)   :             111 |             136 |           7,329 |             162 | w       1,000 | tf 0.000003 | LL.map-str-int-get(k=100,key99)
-LL.span-map-lookup                :             109 |             114 |             293 |             112 | w       1,000 | tf 0.000002 | LL.span-map-lookup   
-LL.sort-strs(n=10)                :             450 |             450 |           5,377 |             500 | w       1,000 | tf 0.000009 | LL.sort-strs(n=10)   
-LL.log-hellos(n=10)               :          62,204 |          62,204 |          62,204 |          62,204 | w           1 | tf 0.000001 | LL.log-hellos(n=10)  
-LL.byte-array-make(n=1)           :              89 |             117 |             389 |             113 | w       1,000 | tf 0.000002 | LL.byte-array-make(n=1)
-LL.byte-array-make(n=1k)          :              88 |              97 |             269 |             107 | w       1,000 | tf 0.000002 | LL.byte-array-make(n=1k)
-LL.byte-array-make(n=100k)        :           1,940 |           4,929 |         283,529 |          10,850 | w       1,000 | tf 0.000199 | LL.byte-array-make(n=100k)
-LL.exec-command(mac,sysctl)       :       1,969,102 |       2,206,937 |       3,853,171 |       2,262,562 | w       1,000 | tf 0.041474 | LL.exec-command(mac,sysctl)
-LL.exec-command(mac,pwd)          :       1,966,200 |       2,661,887 |       3,663,305 |       2,239,748 | w       1,000 | tf 0.041056 | LL.exec-command(mac,pwd)
-LL.exec-command(mac,date)         :       2,618,506 |       3,422,861 |       4,235,149 |       2,979,159 | w       1,000 | tf 0.054609 | LL.exec-command(mac,date)
-LL.exec-command(mac,host)         :       7,259,053 |       9,125,484 |      13,672,749 |       8,596,957 | w       1,000 | tf 0.157586 | LL.exec-command(mac,host)
-LL.exec-command(mac,hostname)     :       2,033,715 |       2,131,015 |       4,272,717 |       2,334,693 | w       1,000 | tf 0.042796 | LL.exec-command(mac,hostname)
-LL.exec-command(mac,uname)        :       2,421,760 |       2,698,616 |       5,858,374 |       2,782,497 | w       1,000 | tf 0.051004 | LL.exec-command(mac,uname)
-LL.exec-command(mac,ls)           :       2,717,329 |       3,417,453 |       5,475,276 |       3,063,791 | w       1,000 | tf 0.056161 | LL.exec-command(mac,ls)
-LL.exec-command(mac,df)           :       2,124,001 |       2,336,185 |       4,011,860 |       2,414,757 | w       1,000 | tf 0.044264 | LL.exec-command(mac,df)
-LL.exec-command(mac,kill)         :       2,017,691 |       2,216,263 |       4,426,670 |       2,309,063 | w       1,000 | tf 0.042326 | LL.exec-command(mac,kill)
-LL.exec-command(mac,sleep=0.01s)  :      12,246,300 |      14,798,319 |      16,781,090 |      14,420,136 | w       1,000 | tf 0.264327 | LL.exec-command(mac,sleep=0.01s)
-LL.exec-command(mac,sleep=0.001s) :       3,077,432 |       3,913,354 |       5,138,236 |       3,569,538 | w       1,000 | tf 0.065431 | LL.exec-command(mac,sleep=0.001s)
-LL.exec-command(mac,sleep=0.0001s):       2,162,377 |       2,389,828 |       4,070,452 |       2,457,587 | w       1,000 | tf 0.045049 | LL.exec-command(mac,sleep=0.0001s)
-LL.exec-command(mac,sh-version)   :       3,909,214 |       4,314,605 |       7,256,460 |       4,393,874 | w       1,000 | tf 0.080542 | LL.exec-command(mac,sh-version)
-LL.benchmarks-total               :  54,482,497,807 |  54,482,497,807 |  54,482,497,807 |  54,482,497,807 | w           1 | tf 0.998688 | LL.benchmarks-total  
-LL.lat-report                     :      33,390,703 |      33,390,703 |      37,700,325 |      35,545,514 | w           2 | tf 0.001303 | LL.lat-report        
+print-yo                          :          18,379 |          18,379 |          18,379 |          18,379 | w           1 | tf 0.000000 | print-yo             
+fn1                               :           4,070 |           4,070 |           4,070 |           4,070 | w           1 | tf 0.000000 | fn1                  
+fn2                               :               0 |               8 |          13,129 |              20 | w     100,234 | tf 0.000154 | fn2                  
+LL.no-op                          :              76 |               6 |         343,178 |              20 | w   1,000,000 | tf 0.001531 | LL.no-op             
+LL.fn-call-return                 :               4 |              21 |           5,999 |              43 | w       1,000 | tf 0.000002 | LL.fn-call-return    
+LL.for-iters(n=1000)              :             342 |             379 |          15,127 |             418 | w       1,000 | tf 0.000008 | LL.for-iters(n=1000) 
+LL.accum-ints(n=1000)             :             325 |             353 |          20,543 |             386 | w       1,000 | tf 0.000007 | LL.accum-ints(n=1000)
+LL.add-int-literals(n=2)          :               4 |              19 |          22,585 |              43 | w       1,000 | tf 0.000002 | LL.add-int-literals(n=2)
+LL.add-str-literals(n=2)          :               2 |               9 |          35,403 |              65 | w       1,000 | tf 0.000002 | LL.add-str-literals(n=2)
+LL.map-str-int-set                :              18 |              61 |         162,170 |             232 | w       1,000 | tf 0.000005 | LL.map-str-int-set   
+LL.map-str-int-get(k=100,key0)    :              14 |              45 |             784 |              55 | w       1,000 | tf 0.000002 | LL.map-str-int-get(k=100,key0)
+LL.map-str-int-get(k=100,key49)   :              18 |              50 |             464 |              75 | w       1,000 | tf 0.000002 | LL.map-str-int-get(k=100,key49)
+LL.map-str-int-get(k=100,key99)   :              20 |              73 |          10,259 |              85 | w       1,000 | tf 0.000003 | LL.map-str-int-get(k=100,key99)
+LL.span-map-lookup                :              21 |              25 |             144 |              26 | w       1,000 | tf 0.000002 | LL.span-map-lookup   
+LL.sort-strs(n=10)                :             305 |             351 |          30,752 |             692 | w       1,000 | tf 0.000012 | LL.sort-strs(n=10)   
+LL.log-hellos(n=10)               :          39,901 |          39,901 |          39,901 |          39,901 | w           1 | tf 0.000001 | LL.log-hellos(n=10)  
+LL.byte-array-make(n=1)           :               2 |              51 |             408 |              24 | w       1,000 | tf 0.000002 | LL.byte-array-make(n=1)
+LL.byte-array-make(n=1k)          :               2 |              36 |             179 |              24 | w       1,000 | tf 0.000002 | LL.byte-array-make(n=1k)
+LL.byte-array-make(n=100k)        :           1,274 |           2,428 |          47,167 |           3,212 | w       1,000 | tf 0.000052 | LL.byte-array-make(n=100k)
+LL.exec-command(mac,sysctl)       :       1,770,610 |       2,256,464 |       4,160,928 |       2,161,151 | w       1,000 | tf 0.034380 | LL.exec-command(mac,sysctl)
+LL.exec-command(mac,pwd)          :       1,718,752 |       2,538,667 |       3,337,201 |       2,163,775 | w       1,000 | tf 0.034421 | LL.exec-command(mac,pwd)
+LL.exec-command(mac,date)         :       2,828,711 |       3,037,945 |       4,158,555 |       3,104,571 | w       1,000 | tf 0.049387 | LL.exec-command(mac,date)
+LL.exec-command(mac,host)         :       7,082,682 |       8,715,181 |      11,363,167 |       7,744,850 | w       1,000 | tf 0.123202 | LL.exec-command(mac,host)
+LL.exec-command(mac,hostname)     :       2,364,476 |       2,589,819 |       3,685,939 |       2,616,319 | w       1,000 | tf 0.041620 | LL.exec-command(mac,hostname)
+LL.exec-command(mac,uname)        :       2,690,084 |       2,844,038 |       4,313,559 |       2,909,084 | w       1,000 | tf 0.046277 | LL.exec-command(mac,uname)
+LL.exec-command(mac,ls)           :       2,915,481 |       3,047,431 |       4,270,495 |       3,182,990 | w       1,000 | tf 0.050635 | LL.exec-command(mac,ls)
+LL.exec-command(mac,df)           :       2,401,178 |       2,496,557 |       3,634,209 |       2,627,120 | w       1,000 | tf 0.041792 | LL.exec-command(mac,df)
+LL.exec-command(mac,kill)         :       2,385,142 |       2,464,085 |       3,647,156 |       2,607,142 | w       1,000 | tf 0.041474 | LL.exec-command(mac,kill)
+LL.exec-command(mac,sleep=0.01s)  :      14,420,574 |      18,696,332 |      22,250,789 |      19,095,015 | w       1,000 | tf 0.303755 | LL.exec-command(mac,sleep=0.01s)
+LL.exec-command(mac,sleep=0.001s) :       5,316,546 |       5,561,305 |      10,314,617 |       6,234,005 | w       1,000 | tf 0.099169 | LL.exec-command(mac,sleep=0.001s)
+LL.exec-command(mac,sleep=0.0001s):       2,518,330 |       2,640,084 |       5,086,594 |       2,836,072 | w       1,000 | tf 0.045116 | LL.exec-command(mac,sleep=0.0001s)
+LL.exec-command(mac,sh-version)   :       3,901,433 |       4,066,254 |       6,550,631 |       4,271,561 | w       1,000 | tf 0.067951 | LL.exec-command(mac,sh-version)
+LL.benchmarks-total               :  61,990,859,808 |  61,990,859,808 |  61,990,859,808 |  61,990,859,808 | w           1 | tf 0.986120 | LL.benchmarks-total  
+LL.lat-report                     :      38,605,648 |      39,508,066 |      89,444,647 |      48,813,690 | w           7 | tf 0.005436 | LL.lat-report        
+totally-adhoc                     :              11 |              11 |              68 |              39 | w           2 | tf 0.000000 | totally-adhoc        
+fn3                               :             105 |           7,247 |           7,247 |           2,487 | w           3 | tf 0.000000 | fn3                  
+fn3(n=1)                          :             105 |             105 |             105 |             105 | w           1 | tf 0.000000 | fn3(n=1)             
+fn3(n=50)                         :             110 |             110 |             110 |             110 | w           1 | tf 0.000000 | fn3(n=50)            
+fn3(n=20000)                      :           7,247 |           7,247 |           7,247 |           7,247 | w           1 | tf 0.000000 | fn3(n=20000)         
+fn4                               :             377 |          16,734 |          90,023 |          21,963 | w         103 | tf 0.000036 | fn4                  
+fn4(a=1,b=1)                      :             377 |             377 |             377 |             377 | w           1 | tf 0.000000 | fn4(a=1,b=1)         
+fn4(a=1,b=100)                    :             417 |             417 |             417 |             417 | w           1 | tf 0.000000 | fn4(a=1,b=100)       
+fn4(a=10,b=20)                    :           4,386 |           4,386 |           4,386 |           4,386 | w           1 | tf 0.000000 | fn4(a=10,b=20)       
+fn4(a=1000,b=15)                  :          11,995 |          16,734 |          90,023 |          22,571 | w         100 | tf 0.000036 | fn4(a=1000,b=15)     

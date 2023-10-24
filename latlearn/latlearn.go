@@ -1,11 +1,11 @@
-// latlearn.go aka LatencyLearner
+// latlearn.go, aka LatLearn
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 October 21
+//     last rev 2023 October 24
 //
 //     contact: groglogic@gmail.com
-//     project: https://github.com/mkramlich/latlearn
+//     project: https://github.com/mkramlich/LatLearn
 
 package latlearn
 
@@ -19,14 +19,29 @@ import (
     "runtime/debug"
     "sort"
     "strings"
+    "sync"
     "time"
 )
 
-// IMPORTANT: For now, the latlearn lib assumes only single-thread (one-goroutine-at-a-time) access.
+// NOTE:
+// This instrumentation lib *is* safe for concurrent use by multiple goroutines
+// (potentially executing in actual parallel across multiple cores, etc.)
+//
+// How so?
+//
+// LatLearn maintains a per-process singleton "state" in terms of its in-memory
+// latency statistics collection, and no direct access to it is exported. Instead,
+// it enforces an inter-thread communication queue-based architecture (using
+// immutable and/or "copy-on-write" messages), for memory safety. The actual
+// measuring and collecting of all the stats (and other relevant settings of the
+// runtime) happens under-the-hood. Any complex details which enforce this are
+// hidden from the app client-side to keep it as simple as possible for them, and
+// to let instrumentation be super easy to apply, and reason about.
+//
+// See the example apps for just how easy.
 
-type LatencyLearner struct {
-    Name                string
-    t1                  time.Time     // NOTE there is no (need for a) t2 field
+type latencyLearner struct {
+    Name                string        // key into learners map
     Last                time.Duration // int64
     Cumul               time.Duration // int64
     Weight              int
@@ -36,72 +51,289 @@ type LatencyLearner struct {
     Pair_ever_completed bool
 }
 
-type VariantLatencyLearner struct {
-    *LatencyLearner
-    parent          *LatencyLearner
+type variantLatencyLearner struct {
+    *latencyLearner
+    parent          *latencyLearner
 }
 
-type LatencyLearnerI interface {
-    GetLL()         *LatencyLearner
-    GetVLL()        *VariantLatencyLearner
+type SpanSampleUnderway struct {
+    Name    string    // a function of both Name & Variant fields form the key into learners map
+    Variant string
+    t1, t2  time.Time // NOTE there is no (need for a) t2 field
+}
 
-    Before()
-    After()
+type ReplyMsg struct {
+    ttype               string // values: "values"
+    Name                string // of tracked span. and learners key. eg: "LL.no-op" or "somefn(N=100)"
+    Pair_ever_completed bool
+    Min                 time.Duration
+    Last                time.Duration
+    Max                 time.Duration
+    Mean                int64
+    Cumul               time.Duration
+    Weight              int
+}
 
-    A()
+type comm_msg struct { // TODO maybe draw from a sync.Pool of comm_msg instances
+    ttype         string   // values: "B", "B2", "A", "values", "report", "stop"
+    params        []string // generic yet app-specific, like for report gen
+
+    // next 4 fields are "value-passed" (or immutable) vars,
+    // and which are equiv to a SpanSampleUnderway instance:
+    name, variant string
+    t1,   t2      time.Time
+    ///////////////////////
+
+    done          chan bool
+    reply_chan    chan ReplyMsg
+}
+
+type latencyLearnerI interface {
+    getLL()         *latencyLearner
+    getVLL()        *variantLatencyLearner
+
+    after2( dur time.Duration) // dur is int64. of ns. legit & precise?
 
     report( *os.File, string, time.Duration, time.Duration)
 }
 
-func ( ll *LatencyLearner)        GetLL()  *LatencyLearner        { return  ll}
-func ( ll *LatencyLearner)        GetVLL() *VariantLatencyLearner { return nil}
-func (vll *VariantLatencyLearner) GetLL()  *LatencyLearner        { return vll.LatencyLearner}
-func (vll *VariantLatencyLearner) GetVLL() *VariantLatencyLearner { return vll}
+type SpanSampleUnderwayI interface {
+    before()
+    after()
+    after_and_submit()
+
+    A() (ok bool)
+}
+
+// NOTE: Apps can change the queue capacity dims, but will ONLY take effect if set BEFORE Init called
+var Outer_queue_capacity      int = 1_000_000 // TODO pick the queue sizes better
+var Inner_queue_capacity      int = 50        // TODO ditto
+
+var comm_outer                chan comm_msg = nil // singleton per proc; consumed by 'serve' fn
+var comm_inner                chan comm_msg = nil // singleton per proc; consumed by 'serve' fn
+
+var init_oncer                sync.Once
+var init_time                 time.Time
+var init_completed            bool = false // to be explicit. we rely on this starting false
+
+ // this structure (along with the singleton serve() goroutine) form the "heart" of LatLearn:
+var learners                  map[string]latencyLearnerI
 
 // tracked_spans built/modified ONLY by the Init and B fns
 // it keeps a stable order of keys, for a better UX of the report
-var tracked_spans            []string
-var Report_fpath             string = "latlearn-report.txt"
-var Learners                 map[string]LatencyLearnerI
-var init_time                time.Time
-var init_completed           bool = false // explicit. we expect this starts false
-var Should_report_builtins   bool = true
-var Should_subtract_overhead bool = false
+var tracked_spans             []string
 
+var Should_report_builtins    bool = true
+var Should_subtract_overhead  bool = false
+var Report_fpath              string = "latlearn-report.txt"
+
+var Overhead_samples_started  bool = false
+var Overhead_samples_finished bool = false
+var Overhead_samples_aborted  bool = false
+
+var Benchmarks_started        bool = false
+var Benchmarks_finished       bool = false
+
+
+func ( ll *latencyLearner)        getLL()  *latencyLearner        { return  ll}
+func ( ll *latencyLearner)        getVLL() *variantLatencyLearner { return nil}
+func (vll *variantLatencyLearner) getLL()  *latencyLearner        { return vll.latencyLearner}
+func (vll *variantLatencyLearner) getVLL() *variantLatencyLearner { return vll}
 
 // for latlearn's internal use only
-func latency_learner( span string) (ll *LatencyLearner, found bool) {
-    lli, found                 := Learners[ span]
+func latency_learner( span string) (ll *latencyLearner, found bool) {
+    lli, found                 := learners[ span]
     if  !found {
-        ll                      = new( LatencyLearner)
+        ll                      = new( latencyLearner)
         ll.Name                 = span
-        Learners[ span] = ll
+        learners[ span] = ll
     } else {
-        ll                      = lli.GetLL()
+        ll                      = lli.getLL()
     }
     return ll, found
 }
 
 // for latlearn's internal use only
-func variant_latency_learner( span string) (vll *VariantLatencyLearner, found bool) {
-    lli, found                 := Learners[ span]
+func variant_latency_learner( span string) (vll *variantLatencyLearner, found bool) {
+    lli, found                 := learners[ span]
     if  !found {
-        ll                     := new( LatencyLearner)
+        ll                     := new( latencyLearner)
         ll.Name                 = span
-        vll                     = new( VariantLatencyLearner)
-        vll.LatencyLearner      =  ll
-        Learners[ span] = vll
+        vll                     = new( variantLatencyLearner)
+        vll.latencyLearner      =  ll
+        learners[ span] = vll
     } else {
-        vll                     = lli.GetVLL()
+        vll                     = lli.getVLL()
     }
     return vll, found
 }
 
-func Init2( spans_app []string) { // span list should be for LLs (parent spans) not VLLs
-    //pre :=      "latlearn.Init2"
-    //log.Printf( "%s\n", pre)
+// TODO promote this fn to become part of the exported API?
+func span_key_form( name string, variant string) (key string) {
+    if (variant != "") {
+        // example: given span name of "somefn" and variant "N=200" then key is "somefn(N=200)"
+        return fmt.Sprintf( "%s(%s)", name, variant)
+    } else { return name}
+}
 
-    Learners = make( map[string]LatencyLearnerI)
+// for internal, latlearn-only, use
+func handle_ssu_A( name string, variant string, t1 time.Time, t2 time.Time) (ok bool) {
+    //pre             := "latlearn.handle_ssu_A"
+
+    dur             := t2.Sub( t1) // time.Duration. int64. of ns. legit & precise
+
+    if     (variant != "") {
+        parent_key  := span_key_form(           name, "")
+        pll, found  := latency_learner(         parent_key)
+        if     (pll == nil) { return false}
+        if  !found  { tracked_spans = append( tracked_spans, parent_key)}
+
+        variant_key := span_key_form(           name, variant)
+        vll, found2 := variant_latency_learner( variant_key)
+        if     (vll == nil) { return false}
+        if  !found2 { tracked_spans = append( tracked_spans, variant_key)}
+
+        vll.parent   = pll // indicates this is variant of parent span, part of family
+
+        if (vll.parent         != nil) { vll.parent.after2(         dur)}
+        if (vll.latencyLearner != nil) { vll.latencyLearner.after2( dur)}
+
+    } else {
+        key         := span_key_form(           name, "")
+        ll, found   := latency_learner(         key)
+        if      (ll == nil) { return false}
+        if !found   { tracked_spans = append( tracked_spans, key)}
+        ll.after2( dur)
+    }
+    return true
+}
+
+// for internal, latlearn-only, use
+func handle_msg_A( msg comm_msg) (ok bool) {
+    return handle_ssu_A( msg.name, msg.variant, msg.t1, msg.t2)
+}
+
+// for internal, latlearn-only, use
+func handle_msg_values( msg comm_msg) {
+    pre :=      "latlearn.handle_msg_values"
+    //log.Printf( "%s: msg.name \"%s\", msg.variant \"%s\"\n", pre, msg.name, msg.variant)
+
+    if (msg.reply_chan == nil) {
+        log.Printf( "%s: reply_chan is nil so return early without replying\n", pre)
+        return
+    }
+
+    key            := span_key_form( msg.name, msg.variant)
+    //log.Printf( "%s: key will use: \"%s\"\n", pre, key)
+
+    no_entry_found := ReplyMsg {
+          ttype:               msg.ttype,
+          Name:                key,
+          Pair_ever_completed: false,
+          Min:                 -1,
+          Last:                -1,
+          Max:                 -1,
+          Mean:                -1,
+          Cumul:               -1,
+          Weight:              -1}
+
+    lli, found     := learners[ key]
+    if  !found {
+        log.Printf( "%s: no entry found in learners for this span: key %s\n", pre, key)
+        msg.reply_chan <- no_entry_found
+        return
+    }
+
+    if (lli == nil) {
+        log.Printf( "%s: learners entry lookup yielded an lli of nil: key %s\n", pre, key)
+        msg.reply_chan <- no_entry_found
+        return
+    }
+
+    ll := lli.getLL()
+
+    //log.Printf( "%s: before calling ll.values\n", pre)
+
+    name, pair_ever_completed, min, last, max, mean, cumul, weight := ll.values()
+
+    //log.Printf( "%s: before pushing a normal replyMsg into reply_chan\n", pre)
+
+    msg.reply_chan<- ReplyMsg {
+          ttype:               msg.ttype,
+          Name:                name,
+          Pair_ever_completed: pair_ever_completed,
+          Min:                 min,
+          Last:                last,
+          Max:                 max,
+          Mean:                mean,
+          Cumul:               cumul,
+          Weight:              weight}
+}
+
+// for internal, latlearn-only, use
+func handle_msg_report( msg comm_msg) {
+    //log.Printf( "latlearn.handle_msg_report\n")
+
+    report_inner( msg.params)
+
+    if (msg.done != nil) {
+        msg.done <- true
+    }
+}
+
+// for internal, latlearn-only, use
+func handle_msg_benchmarks( msg comm_msg) {
+    //log.Printf( "latlearn.handle_msg_benchmarks\n")
+
+    benchmarks_inner()
+
+    if (msg.done != nil) {
+        msg.done <- true
+    }
+}
+
+// for internal, latlearn-only, use
+func handle_comm_msg( msg comm_msg) (stop bool) {
+    //log.Printf("latlearn.handle_comm_msg\n")
+
+    switch   msg.ttype {
+        case "A" :     _ = handle_msg_A(          msg) // TODO maybe add a new A-like msg for 2+ (many) stats in 1 shot (to reduce pressure/contention on the 2 comm queues, since each has fixed capacity)
+        case "values":     handle_msg_values(     msg)
+        case "benchmarks": handle_msg_benchmarks( msg)
+        case "report":     handle_msg_report(     msg)
+        case "stop":       return true // TODO consider chan close()
+    }
+    return false
+}
+
+// for internal, latlearn-only, use
+func serve() {
+    log.Printf( "latlearn.serve\n")
+
+    for {
+        select {
+        case msg1 := <-comm_outer: if handle_comm_msg( msg1) { return} // msgs from outside (ie. apps)
+        case msg2 := <-comm_inner: if handle_comm_msg( msg2) { return} // msgs from inside  (latlearn)
+        }
+    }
+}
+
+// for internal, latlearn-only, use
+//
+// NOTE: This fn, init_inner, is NOT called by the comm_outer/inner consuming
+// "serve" fn singleton goroutine. Why not? Because that "serve" goroutine
+// does NOT yet exist, when Init is called. Indeed, it is *created* by Init.
+// Rather, this fn will instead be called by a (potentially disposable /
+// reusable / generic) goroutine avail to (and assigned by) Golang's
+// sync.Once.Do method implementation. (See the top-level Init and Init2 fns.)
+//
+func init_inner( spans_app []string) (already bool) { // span list should be for LLs (parent spans) not VLLs
+    pre :=      "latlearn.init_inner"
+    log.Printf( "%s\n", pre)
+
+    if init_completed { return true} // should not be needed, because of init_oncer. thus to be extra sure
+
+    learners = make( map[string]latencyLearnerI)
 
     // latlearn's built-in benchmark spans
     //     for purposes of comparison with the enduser's reported span metrics
@@ -145,72 +377,67 @@ func Init2( spans_app []string) { // span list should be for LLs (parent spans) 
     }
 
     tracked_spans  = spans
+
+    if (Outer_queue_capacity < 100) { Outer_queue_capacity = 100}
+    if (Inner_queue_capacity <  10) { Inner_queue_capacity =  10}
+
+    log.Printf(
+        "%s: comm queue capacities used: outer %d, inner %d\n",
+        pre, Outer_queue_capacity, Inner_queue_capacity)
+
+    comm_outer     = make( chan comm_msg, Outer_queue_capacity)
+    comm_inner     = make( chan comm_msg, Inner_queue_capacity)
+
     init_time      = time.Now()
     init_completed = true
 
+    go serve() // <- in a sense, that thread becomes the "beating heart" of LatLearn
+
     //log.Printf( "%s: END\n", pre)
+    return false
 }
 
 func Init() {
-     Init2( []string {})
+    init_oncer.Do( func() {
+        init_inner( []string {})
+    })
 }
 
-func (ll *LatencyLearner) Before() {
-    //log.Printf( "LatencyLearner.Before: name %s\n", ll.Name)
-
-    // record the time BEFORE span-of-interest begins
-    ll.t1            = time.Now() // type is time.Time
-    ll.pair_underway = true
+func Init2( spans_app []string) { // span list should be for LLs (parent spans) not VLLs
+    init_oncer.Do( func() {
+        init_inner( spans_app)
+    })
 }
 
-func (vll *VariantLatencyLearner) Before() {
-    //log.Printf( "LatencyLearner.Before: name %s\n", ll.Name)
-
-    // record the time BEFORE span-of-interest begins
-    vll.parent.t1            = time.Now() // we CAN assume safely that vll.parent != nil
-    vll.parent.pair_underway = true
-
-    vll.t1                   = vll.parent.t1
-    vll.pair_underway        = true
+func (ssu *SpanSampleUnderway) before() {
+    ssu.t1 = time.Now()
 }
 
-func B( name string) *LatencyLearner {
+func ssu_before( name string, variant string) *SpanSampleUnderway {
+    ssu := &SpanSampleUnderway{ Name:name, Variant:variant}
+    ssu.before()
+    return ssu
+}
+
+func B( name string) *SpanSampleUnderway {
     //log.Printf( "B: name %s\n", name)
 
-    if !init_completed { // allows lazy init of latlearn, upon first call to B
-        Init()
-    }
+    if !init_completed { return nil} // TODO maybe add a separate "ok bool" return param
 
-    ll, found := latency_learner( name)
-    if !found { // if was an ad hoc span? meaning this span was NOT already tracked
-        tracked_spans = append( tracked_spans, name) // we assume here that tracked_spans will stay in sych with the set of keys in Learners. except tracked_spans adds extra notion of preserving a stable order to the keys (relied on in the report)
-    }
-    ll.Before()
-    return ll
+    return ssu_before( name, "")
 }
 
-func B2( name string, variant string) *VariantLatencyLearner {
+func B2( name string, variant string) *SpanSampleUnderway {
     //log.Printf( "B2: name %s\n", name)
 
-    if !init_completed { // allows lazy init of latlearn, upon first call to B2
-        Init()
-    }
+    if !init_completed { return nil} // TODO maybe add a separate "ok bool" return param
 
-    ll, found    := latency_learner( name) // example name: "somefn"
-    if !found   { tracked_spans = append( tracked_spans, name)}
-
-    variant_name := fmt.Sprintf( "%s(%s)", name, variant) // example variant_name: "somefn(N=200)"
-    vll, found2  := variant_latency_learner( variant_name)
-    if  !found2 { tracked_spans = append( tracked_spans, variant_name)}
-    vll.parent    = ll // to note this span is a variant of a parent span, and part of a span family
-    vll.Before() // the called Before fn here will ALSO in effect call ll.Before()
-
-    return vll
+    return ssu_before( name, variant)
 }
 
 // for latlearn's internal use only
-func (ll *LatencyLearner) after2( dur time.Duration) { // dur is int64. of ns. legit & precise?
-    //log.Printf("LatencyLearner.after2: name %s\n", ll.name)
+func (ll *latencyLearner) after2( dur time.Duration) { // dur is int64. of ns. legit & precise?
+    //log.Printf("latencyLearner.after2: name %s\n", ll.name)
 
     //log.Printf( "%s before: %#v ms\n",         ll.name, ll.t1) // lg num printed is ms beyond the sec
     //log.Printf( "%s after : %#v ms\n",         ll.name, t2)
@@ -228,65 +455,92 @@ func (ll *LatencyLearner) after2( dur time.Duration) { // dur is int64. of ns. l
         ll.Max = dur
     }
 
-    ll.pair_underway            = false
-    ll.Pair_ever_completed      = true
+    ll.pair_underway       = false
+    ll.Pair_ever_completed = true
 }
 
-func (ll *LatencyLearner) After() {
-    // record the time AFTER span-of-interest ended
-    t2  := time.Now()
-    dur := t2.Sub( ll.t1) // time.Duration. int64. of ns. legit & precise?
-
-    ll.after2( dur)
+// for latlearn-internal use only
+func (ssu *SpanSampleUnderway) after() {
+    ssu.t2 = time.Now()
 }
 
-func (vll *VariantLatencyLearner) After() {
-    // record the time AFTER span-of-interest ended
-    t2  := time.Now()
-    dur := t2.Sub( vll.t1) // time.Duration. int64. of ns. legit & precise?
+// like after_and_submit but does NOT use channels, just updates the LL in the map directly
+func (ssu *SpanSampleUnderway) after_and_update() (ok bool) {
+    if !init_completed { return false}
 
-    vll.parent.after2(         dur)
-    vll.LatencyLearner.after2( dur)
+    ssu.after()
+
+    return handle_ssu_A( ssu.Name, ssu.Variant, ssu.t1, ssu.t2)
 }
 
-func (ll *LatencyLearner) A() {
-    ll.After()
+// for latlearn-internal use only
+func (ssu *SpanSampleUnderway) after_and_submit( comm chan comm_msg) (ok bool) {
+    if !init_completed { return false}
+
+    ssu.after()
+
+    comm <- comm_msg{
+                ttype:   "A",
+                name:    ssu.Name,
+                variant: ssu.Variant,
+                t1:      ssu.t1,
+                t2:      ssu.t2}
+    return true
 }
 
-func (vll *VariantLatencyLearner) A() {
-    vll.After()
+func (ssu *SpanSampleUnderway) A() (ok bool) {
+    return ssu.after_and_submit( comm_outer)
 }
 
-func LLA( name string) { // pair complement to "func B(name string)"
-    if !init_completed { return}
+func Latency_measure_self_sample( n int) (ok bool) {
+    if !init_completed { return false}
 
-    Learners[ name].After() // TODO map found guard
-}
+    // The purpose of this fn is to (try to) measure/estimate the latency cost
+    // of a LatLearn measurement. In other words, learn the overhead that our
+    // instrumentation imposes upon each covered span. However, there are lots
+    // of subtle issues and (de facto) asymptotic complexities which lurk here.
+    //
+    // For "best" results, try to call this fn under "normal" runtime conditions
+    // for your app. Also, note that the larger the "n" param (the larger the
+    // total number of "LL-no-op" samples we collect, overall), the more
+    // "accurate" and helpful your deductions about its meaning will be.
 
-func Latency_measure_self_sample( n int) {
-    if !init_completed { return} // TODO auto-init, or, return error
-
-    // below is to (try to) measure/estimate the latency cost of a latlearn measurement
-    // but lots of subtle issues and complexity lurk here
     if (n < 0) { n = 1_000_000} // we'll do it 1 million times, hoping to mitigate (somewhat, maybe) the effects of host load spikes, GC runs, etc
 
-    ll    := Learners[ "LL.no-op"]
+    Overhead_samples_started  = true
+    Overhead_samples_finished = false
+    Overhead_samples_aborted  = false
     for i := 0; i < n; i++ {
-        ll.Before()
-        ll.After()
+        ssu   := ssu_before( "LL.no-op", "")
+        // ... some app-specific code (of latency measurement interest) would normally be here ...
+        if ok := ssu.A(); !ok {
+            Overhead_samples_finished = true
+            Overhead_samples_aborted  = true
+            return false
+        }
     }
+    Overhead_samples_finished = true
+
+    // TODO instead push a "bulk A" type of msg, so like 1M samples of LL.no-op will only occupy 1 msg slot in the comm_outer queue
+
+    return true
 }
 
-func Measure_overhead_estimate() (overhead time.Duration, exists bool) {
+// for internal, latlearn-only, use
+func measure_overhead_estimate() (overhead time.Duration, exists bool) {
     if !init_completed              { return -1, false}
 
-    lli, found := Learners[ "LL.no-op"]
+    lli, found := learners[ "LL.no-op"]
 
     if  !found                      { return -1, false}
 
-    ll_noop    := lli.GetLL()
+    ll_noop    := lli.getLL()
 
     if !ll_noop.Pair_ever_completed { return -1, false}
+
+    // TODO also check for these conditions:
+    //      Overhead_samples_finished is true
+    //      Overhead_samples_aborted  is false
 
     return ll_noop.Min, true
 }
@@ -300,63 +554,65 @@ func benchmark_exec( name_sub string, exe string, args []string) { // name_sub l
     for i      := 0; i < 1000; i++ {
         cmd    := exec.Command( exe, args...)
         span   := fmt.Sprintf( "LL.exec-command(%s)", name_sub)
-        ll     := B( span)
+        ll     := ssu_before( span, "")
         if err := cmd.Run(); (err != nil) {
             // TODO call variant of ll.A() method with arg to indicate it failed
         }
-        ll.A()
+        ll.after_and_update()
     }
 }
 
-func Benchmarks() {
-    if !init_completed { return} // TODO auto-init, or, return error
+func benchmarks_inner() (performed bool) {
+    pre :=      "latlearn.benchmarks_inner"
+    log.Printf( "%s\n", pre)
 
-    pre      :=      "latlearn_benchmarks"
-    ll_bt    := B( "LL.benchmarks-total")
+    if !init_completed { return false}
 
-    Latency_measure_self_sample( -1) // defaults to 1M
+    Benchmarks_started = true
+
+    ll_bt     := ssu_before( "LL.benchmarks-total","")
 
     for i     := 0; i < 1000; i++ {
-        ll    := B( "LL.fn-call-return")
+        ll    := ssu_before( "LL.fn-call-return","")
         noop_fn_for_benchmark_calls()
-        ll.A()
+        ll.after_and_update()
     }
 
     for i     := 0; i < 1000; i++ {
-        ll    := B( "LL.for-iters(n=1000)")
+        ll    := ssu_before( "LL.for-iters(n=1000)","")
         for j := 0; j < 1000; j++ {
         }
-        ll.A()
+        ll.after_and_update()
     }
 
     for i     := 0; i < 1000; i++ {
-        ll    := B( "LL.accum-ints(n=1000)")
+        ll    := ssu_before( "LL.accum-ints(n=1000)","")
         v     := 0
         for j := 0; j < 1000; j++ {
             v += j
         }
-        ll.A()
+        ll.after_and_update()
     }
 
     for i    := 0; i < 1000; i++ {
-        ll   := B( "LL.add-int-literals(n=2)")
+        ll   := ssu_before( "LL.add-int-literals(n=2)","")
         a    := (1 + 2)
         _     = a // make closer to real, and compiler happy
-        ll.A()
+        ll.after_and_update()
     }
 
     for i    := 0; i < 1000; i++ {
-        ll   := B( "LL.add-str-literals(n=2)")
+        ll   := ssu_before( "LL.add-str-literals(n=2)","")
         c    := ("a" + "b")
         _     = c // make closer to real, and compiler happy
-        ll.A()
+        ll.after_and_update()
     }
 
     for i     := 0; i < 1000; i++ {
         m     := make( map[string]int)
-        ll    := B( "LL.map-str-int-set")
+        ll    := ssu_before( "LL.map-str-int-set","")
         m[ "foo"] = 5
-        ll.A()
+        ll.after_and_update()
     }
 
     keys    := []string {}
@@ -368,21 +624,21 @@ func Benchmarks() {
         for _, key := range keys {
             m[ key] = 5
         } // we've populated the map with 100 entries
-        ll    := B( "LL.map-str-int-get(k=100,key0)")
+        ll    := ssu_before( "LL.map-str-int-get(k=100,key0)","")
         _ = m[ "key0"]
-        ll.A()
-        ll     = B( "LL.map-str-int-get(k=100,key49)")
+        ll.after_and_update()
+        ll     = ssu_before( "LL.map-str-int-get(k=100,key49)","")
         _ = m[ "key49"]
-        ll.A()
-        ll     = B( "LL.map-str-int-get(k=100,key99)")
+        ll.after_and_update()
+        ll     = ssu_before( "LL.map-str-int-get(k=100,key99)","")
         _ = m[ "key99"]
-        ll.A()
+        ll.after_and_update()
     }
 
     for i    := 0; i < 1000; i++ {
-        ll   := B( "LL.span-map-lookup")
-        a, b := Learners[ "LL.no-op"]
-        ll.A()
+        ll   := ssu_before( "LL.span-map-lookup","")
+        a, b := learners[ "LL.no-op"]
+        ll.after_and_update()
         _     = a // yes, is reason why we are doing this
         _     = b // ditto
     }
@@ -393,32 +649,32 @@ func Benchmarks() {
         for _, s := range strs {
             strs2 = append( strs2, s)
         }
-        ll   := B( "LL.sort-strs(n=10)")
+        ll   := ssu_before( "LL.sort-strs(n=10)","")
         sort.Strings( strs2) // sorts the given slice in-place
-        ll.A()
+        ll.after_and_update()
     }
 
-    ll       := B( "LL.log-hellos(n=10)")
+    ll       := ssu_before( "LL.log-hellos(n=10)","")
     for i    := 0; i < 10; i++ {
         log.Printf( "%s: log measure test\n", pre)
     }
-    ll.A()
+    ll.after_and_update()
 
     for i     := 0; i < 1000; i++ {
-        ll    := B( "LL.byte-array-make(n=1)")
+        ll    := ssu_before( "LL.byte-array-make(n=1)","")
         array := make( []byte,      1)
         _      = array // to quiet the compiler
-        ll.A()
+        ll.after_and_update()
 
-        ll     = B( "LL.byte-array-make(n=1k)")
+        ll     = ssu_before( "LL.byte-array-make(n=1k)","")
         array  = make( []byte,   1000)
         _      = array // to quiet the compiler
-        ll.A()
+        ll.after_and_update()
 
-        ll     = B( "LL.byte-array-make(n=100k)")
+        ll     = ssu_before( "LL.byte-array-make(n=100k)","")
         array  = make( []byte, 100000)
         _      = array // to quiet the compiler
-        ll.A()
+        ll.after_and_update()
     }
 
     if (runtime.GOOS == "darwin") {
@@ -437,17 +693,22 @@ func Benchmarks() {
         benchmark_exec( "mac,sh-version",    "/bin/sh",          []string {"--version",})
     }
 
-    ll_bt.A()
+    ll_bt.after_and_update()
+
+    Benchmarks_finished = true
+
+    return true
 }
 
-func (ll *LatencyLearner) values() ( string, time.Duration, time.Duration, int, time.Duration, time.Duration, bool, bool) {
-    return ll.Name, ll.Last, ll.Cumul, ll.Weight, ll.Min, ll.Max, ll.pair_underway, ll.Pair_ever_completed
+func (ll *latencyLearner) values() ( name string, pair_ever_completed bool, min time.Duration, last time.Duration, max time.Duration, mean int64, cumul time.Duration, weight int) {
+    mean, weight = ll.mean()
+    return ll.Name, ll.Pair_ever_completed, ll.Min, ll.Last, ll.Max, mean, ll.Cumul, weight
 }
 
-func (ll *LatencyLearner) Mean() ( mean_latency int64, weight int) {
+func (ll *latencyLearner) mean() ( mean_latency int64, weight int) {
     mean_latency      = int64( -1)
     weight            = ll.Weight
-    if weight         > 0 {
+    if (weight        > 0) {
         cumul        := ll.Cumul.Nanoseconds()
         mean_latency  = cumul / int64( weight)
     }
@@ -503,30 +764,31 @@ func number_grouped( val int64, sep string) string { // sep value like "," or " 
 }
 
 // for latlearn's internal use only
-func overhead_comp( metric_in int64, overhead int64) (metric_out int64) { // "comp" for compensate
+func overhead_comp( metric_in int64, overhead int64) (metric_out int64) { // "comp" means compensate
     if Should_subtract_overhead {
         metric_out = (metric_in - overhead)
+        if (metric_out < 0) { metric_out = 0} // We apply this minimum cap on metric_out because its possible for our "best" discovered LL.no-op min field value (in a particular process session) to not reflect the absolute truest minimum value possible during that run. In those (rare) edge cases, if we did NOT apply this adjustment, the reported latency could appear as a (usually small) negative number of ns. Since that is obviously nonsense (ie. impossible, in reality), we "patch" it here to ensure the reported value is never *less* than 0 ns. In other words, our premise/bias is that *almost* everything takes *some* time, and that any negative "measured" latency can be due *only* to either a bug or a calculation quirk, caused by bad math or imperfect/incomplete effort at evidence gathering.
     } else {
-        metric_out = metric_in
+        metric_out =  metric_in
     }
     return metric_out
 }
 
 // for latlearn's internal use only
-func (ll *LatencyLearner) report( f *os.File, name_field string, since_init time.Duration, overhead time.Duration) { // time.Duration is int64 ns
+func (ll *latencyLearner) report( f *os.File, name_field string, since_init time.Duration, overhead time.Duration) { // time.Duration is int64 ns
     line := ""
 
     if ll.Pair_ever_completed {
         min              := int64( ll.Min)
         if (overhead != -1) && (ll.Name != "LL.no-op") {
-            min           = overhead_comp( int64( ll.Min),          int64( overhead))
+            min           = overhead_comp( int64( ll.Min),  int64( overhead))
         }
         min_txt          := fmt.Sprintf( "%15s", number_grouped( int64( min), ","))
 
-        last             := overhead_comp( int64(ll.Last), int64(overhead))
+        last             := overhead_comp( int64( ll.Last), int64( overhead))
         last_txt         := fmt.Sprintf( "%15s", number_grouped( int64( last), ","))
 
-        max              := overhead_comp( int64(ll.Max),          int64(overhead))
+        max              := overhead_comp( int64( ll.Max),  int64( overhead))
         max_txt          := fmt.Sprintf( "%15s", number_grouped( int64( max), ","))
 
         mean_txt         := "???,???,???,???"
@@ -534,7 +796,7 @@ func (ll *LatencyLearner) report( f *os.File, name_field string, since_init time
         tf_txt           :=        "????????"
         weight           := ll.Weight
 
-        if weight         > 0 {
+        if (weight        > 0) {
             cum_ns       := ll.Cumul.Nanoseconds() // int64. ns
 
             lat_mean     := cum_ns / int64( weight)
@@ -573,7 +835,7 @@ func mac_sysctl( key string) (value string) {
     var err error
 
     if  out, err = cmd.CombinedOutput(); (err != nil) {
-        //log.Printf( "latearn report's mac sysctl exec failed. output: %s\n", string( out))
+        //log.Printf( "latlearn report's mac sysctl exec failed. output: %s\n", string( out))
         //log.Fatal( err)
         return ""
     }
@@ -584,6 +846,7 @@ func mac_sysctl( key string) (value string) {
 
 // for latlearn's internal use only
 func mac_sysctl_report_line( key string, f *os.File) {
+
     value := mac_sysctl( key)
     line  := fmt.Sprintf( "%-27s: %s\n", key, value)
     io.WriteString( f, line)
@@ -591,6 +854,7 @@ func mac_sysctl_report_line( key string, f *os.File) {
 
 // for latlearn's internal use only
 func write_info_about_mac_host_to_report( f *os.File) {
+
     mac_sysctl_report_line( "kern.ostype",                 f)
     mac_sysctl_report_line( "kern.osproductversion",       f)
     mac_sysctl_report_line( "kern.osrelease",              f)
@@ -607,47 +871,62 @@ func write_info_about_mac_host_to_report( f *os.File) {
     mac_sysctl_report_line( "hw.busfrequency",             f)
 }
 
-func Report2( params []string) {
-    if !init_completed { return}
-    pre := "latlearn_report2"
+func report_inner( params []string) (ok bool) {
+    pre :=      "latlearn.report_inner"
+    //log.Printf( "%s\n", pre)
 
-    ll      := B( "LL.lat-report")
+    if !init_completed { return false}
 
-    f, err  := os.Create( Report_fpath)
-    if err  != nil {
-        msg := fmt.Sprintf( "latlearn/%s could not create file for report: path '%s', err %#v", pre, Report_fpath, err)
-        log.Printf( "%s\n", msg)
-        panic( msg)
+    ssu := ssu_before( "LL.lat-report", "")
+
+    f,  err := os.Create( Report_fpath)
+    if (err != nil) {
+        log.Printf(
+            "%s: could not create file for report: path '%s', err %#v\n",
+            pre, Report_fpath, err)
+        return false
     }
-    defer f.Close()
+    defer func() { if (f != nil) { f.Close()}}()
 
     io.WriteString( f, "Latency Report (https://github.com/mkramlich/latlearn)\n\n")
-    io.WriteString( f, fmt.Sprintf("Should_subtract_overhead: %v\n", Should_subtract_overhead))
+
+    io.WriteString( f, fmt.Sprintf( "Outer_queue_capacity:        %d\n", Outer_queue_capacity))
+    io.WriteString( f, fmt.Sprintf( "Inner_queue_capacity:        %d\n", Inner_queue_capacity))
+
+    io.WriteString( f, fmt.Sprintf( "Overhead_samples_started:    %v\n", Overhead_samples_started))
+    io.WriteString( f, fmt.Sprintf( "Overhead_samples_finished:   %v\n", Overhead_samples_finished))
+    io.WriteString( f, fmt.Sprintf( "Overhead_samples_aborted:    %v\n", Overhead_samples_aborted))
+
+    io.WriteString( f, fmt.Sprintf( "Benchmarks_started:          %v\n", Benchmarks_started))
+    io.WriteString( f, fmt.Sprintf( "Benchmarks_finished:         %v\n", Benchmarks_finished))
+
+    io.WriteString( f, fmt.Sprintf( "Should_report_builtins:      %v\n", Should_report_builtins))
+
+    io.WriteString( f, fmt.Sprintf( "Should_subtract_overhead:    %v\n", Should_subtract_overhead))
     if Should_subtract_overhead {
-        io.WriteString( f, "metric treated as overhead: LL.no-op, min\n")
+        io.WriteString( f,          "metric treated as overhead:  LL.no-op, min\n")
     }
 
     t2         := time.Now()         // time.Time
     since_init := t2.Sub( init_time) // time.Duration. int64. ns. legit/precise?
     si_txt     := number_grouped( int64( since_init), ",")
-    time_param := fmt.Sprintf( "since LL init: %s ns\n\n", si_txt)
+    time_param := fmt.Sprintf(      "since LL init:               %s ns\n\n", si_txt)
     io.WriteString( f, time_param)
 
-    io.WriteString( f, fmt.Sprintf( "Go ver:         %s\n", runtime.Version()))
-    io.WriteString( f, fmt.Sprintf( "GOARCH:         %s\n", runtime.GOARCH))
-    io.WriteString( f, fmt.Sprintf( "GOOS:           %s\n", runtime.GOOS))
-    io.WriteString( f, fmt.Sprintf( "NumCPU:         %d\n", runtime.NumCPU()))
-    io.WriteString( f, fmt.Sprintf( "GOMAXPROCS:     %d\n", runtime.GOMAXPROCS( -1)))
-    io.WriteString( f, fmt.Sprintf( "NumGoroutine:   %d\n", runtime.NumGoroutine()))
-    //io.WriteString( f, fmt.Sprintf( "NumCgoCall:   %d\n", runtime.NumCgoCall()))
+    io.WriteString( f, fmt.Sprintf( "Go ver:                      %s\n", runtime.Version()))
+    io.WriteString( f, fmt.Sprintf( "GOARCH:                      %s\n", runtime.GOARCH))
+    io.WriteString( f, fmt.Sprintf( "GOOS:                        %s\n", runtime.GOOS))
+    io.WriteString( f, fmt.Sprintf( "NumCPU:                      %d\n", runtime.NumCPU()))
+    io.WriteString( f, fmt.Sprintf( "GOMAXPROCS:                  %d\n", runtime.GOMAXPROCS( -1)))
+    io.WriteString( f, fmt.Sprintf( "NumGoroutine:                %d\n", runtime.NumGoroutine()))
 
     mem_limit     := debug.SetMemoryLimit( -1)
     mem_limit_str := number_grouped( mem_limit, ",")
-    io.WriteString( f, fmt.Sprintf( "SetMemoryLimit: %s bytes\n", mem_limit_str))
+    io.WriteString( f, fmt.Sprintf( "SetMemoryLimit:              %s bytes\n", mem_limit_str))
 
     gogc := ""
     if val, ok := os.LookupEnv(     "GOGC"); ok {           gogc = val}
-    io.WriteString( f, fmt.Sprintf( "GOGC:           %s\n", gogc))
+    io.WriteString( f, fmt.Sprintf( "GOGC:                        %s\n", gogc))
 
     if (runtime.GOOS == "darwin") {
         write_info_about_mac_host_to_report( f)
@@ -655,30 +934,31 @@ func Report2( params []string) {
 
     term_rows  := "?"
     term_cols  := "?"
-    if val, ok := os.LookupEnv(     "LINES");   ok {        term_rows = val}
-    if val, ok := os.LookupEnv(     "COLUMNS"); ok {        term_cols = val}
-    io.WriteString( f, fmt.Sprintf( "LINES:          %s\n", term_rows))
-    io.WriteString( f, fmt.Sprintf( "COLUMNS:        %s\n", term_cols))
+    if val, ok := os.LookupEnv(     "LINES");   ok { term_rows = val}
+    if val, ok := os.LookupEnv(     "COLUMNS"); ok { term_cols = val}
+    io.WriteString( f, fmt.Sprintf( "LINES:                       %s\n", term_rows))
+    io.WriteString( f, fmt.Sprintf( "COLUMNS:                     %s\n", term_cols))
 
     host       := ""
-    if val, ok := os.LookupEnv(     "HOST"); ok {           host = val}
-    io.WriteString( f, fmt.Sprintf( "HOST:           %s\n", host))
+    if val, ok := os.LookupEnv(     "HOST"); ok { host = val}
+    io.WriteString( f, fmt.Sprintf( "HOST:                        %s\n", host))
 
     term       := ""
-    if val, ok := os.LookupEnv(     "TERM"); ok {           term = val}
-    io.WriteString( f, fmt.Sprintf( "TERM:           %s\n", term))
+    if val, ok := os.LookupEnv(     "TERM"); ok { term = val}
+    io.WriteString( f, fmt.Sprintf( "TERM:                        %s\n", term))
 
     io.WriteString( f, "\n")
 
     // Context Params (which may impact interpretation of the reported span metrics)
-    for i, param     := range params {
-        txt          := ""
-        if        i  == 0 {
-            txt       = param
+    // TODO prob change the params printout to just one K:V pair per line
+    for i, param      := range params {
+        txt           := ""
+        if         (i == 0) {
+            txt        = param
         } else if ((i != 0) && ((i % 4) == 0)) { // TODO do this better
-              txt     = "\n" + param
-        } else if i > 0 {
-              txt     = ", " + param
+            txt        = "\n" + param
+        } else if  (i  > 0) {
+            txt        = ", " + param
         }
         io.WriteString( f, txt)
     }
@@ -712,18 +992,95 @@ func Report2( params []string) {
 
     var overhead time.Duration = -1 // this value signals that we have no usable estimate
     if Should_subtract_overhead {
-        overhead, _ = Measure_overhead_estimate()
+        overhead, _ = measure_overhead_estimate()
     }
 
     for _, span := range tracked_spans {
         if !Should_report_builtins && strings.HasPrefix( span,"LL.") { continue}
-        Learners[ span].report( f, name_field, since_init, overhead) // TODO add found-in-map guard
+        learners[ span].report( f, name_field, since_init, overhead) // TODO add found-in-map guard
     }
 
-    ll.A()
+    ok = ssu.after_and_update()
+    return ok
 }
 
-func Report() {
-     Report2( []string {})
+func Report() (ok bool) {
+    //log.Printf( "latlearn.Report\n")
+
+    if !init_completed { return false}
+
+    done_chan  := make( chan bool, 1)
+    comm_outer <- comm_msg{ ttype: "report", done:done_chan}
+    <- done_chan
+    return true
+}
+
+func Report2( params []string) (ok bool) {
+    //log.Printf( "latlearn.Report2\n")
+
+    if !init_completed { return false}
+
+    done_chan  := make( chan bool, 1)
+    comm_outer <- comm_msg{ ttype: "report", params:params, done:done_chan}
+    <- done_chan
+    return true
+}
+
+func Benchmarks() (ok bool) {
+    //log.Printf( "latlearn.Benchmarks\n")
+
+    if !init_completed { return false}
+
+    done_chan  := make( chan bool, 1)
+    comm_outer <- comm_msg{ ttype: "benchmarks", done:done_chan}
+    <- done_chan
+    return true
+}
+
+func Values( span string) (values ReplyMsg, ok bool) {
+    //.pre :=      "latlearn.Values"
+    //log.Printf( "%s:\n", pre)
+
+    if !init_completed { return ReplyMsg{}, false}
+
+    reply_chan := make( chan ReplyMsg, 1)
+
+    //log.Printf( "%s: before pushing comm_msg into comm_outer\n", pre)
+
+    comm_outer <- comm_msg{ ttype: "values", name: span, reply_chan: reply_chan}
+
+    //log.Printf( "%s: before pulling replyMsg out of reply_chan\n", pre)
+
+    values       = <-reply_chan
+
+    //log.Printf( "%s: after  pulling replyMsg out of reply_chan\n", pre)
+
+    return values, true
+}
+
+func Overhead() (overhead ReplyMsg, ok bool) {
+    //log.Printf( "latlearn.Overhead\n")
+
+    // This fn's caller should 1st check if our response is ok.
+    // Then (if ok true), check ALSO if overhead.pair_ever_completed is true.
+    // If so, then use the value of overhead.min for what latlearn considers
+    // its per-span overhead cost.
+    //
+    // It might also be valuable for the app to confirm Overhead_samples_finished
+    // is true. And that Overhead_samples_aborted is false. By default we try to
+    // capture 1M samples of LL.no-op span. These two flags ensure that all 1M
+    // samples were carried out and finished, without error.
+
+    return Values( "LL.no-op")
+}
+
+func Stop() (ok bool) {
+    log.Printf( "latlearn.Stop\n")
+
+    if !init_completed { return false}
+
+    comm_outer <- comm_msg{ ttype: "stop"} // TODO consider calling close on chan, somewhere
+
+    return true
 }
 

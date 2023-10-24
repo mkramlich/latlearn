@@ -1,5 +1,5 @@
 // latlearn/example-app2.go
-//     project: https://github.com/mkramlich/latlearn
+//     project: https://github.com/mkramlich/LatLearn
 
 package main
 
@@ -22,26 +22,17 @@ func optional_tasks() {
 }
 
 func should_do_optional_tasks( span string) bool {
-    lli, found := latlearn.Learners[ span]
-
-    if  !found                 { return true}
-
-    // By here we don't know if lli points at a LatencyLearner or a
-    // VariantLatencyLearner. However they do both contain an LL instance, so
-    // lets grab that and use it below:
-    ll := lli.GetLL()
-
-    if !ll.Pair_ever_completed { return true}
-
-    loop_latency_mean, weight := ll.Mean() // mean value returned is int64 of ns
+    replyMsg, ok := latlearn.Values( span)
+    if       !ok                     { return true}
+    if !replyMsg.Pair_ever_completed { return true}
 
     // The case we guard for here SHOULD never happen. Only to be rigorous:
-    if (weight < 1)            { return true}
+    if (replyMsg.Weight < 1)         { return true}
 
-    if (loop_latency_mean > int64( 50000000)) { // 50,000,000 ns is 50 ms
-        // We don't want our loop to exceed 1 ms in total latency,
-        // if we can help it. Therefore lets skip over all optional tasks during
-        // this iteration
+    if (replyMsg.Mean > int64( 50_000_000)) { // 50,000,000 ns is 50 ms
+        // We don't want our loop to exceed 50 ms in total latency,
+        // if we can help it. Therefore lets SKIP over all OPTIONAL tasks
+        // during this iteration
         return false
     }
     return true
@@ -68,6 +59,7 @@ func engine_loop( dyn_adjust bool) {
 }
 
 func main() {
+    fmt.Printf( "example-app2\n")
     // Here we'll show off how latlearn can be used by a program to implement
     // dynamic adjustment of execution strategies -- while running "in prod"
     // -- in order to maintain some ideal QoS goal, or business requirement.
@@ -79,10 +71,10 @@ func main() {
     // We call init here so its latency cost not incurred while inside engine_loop.
     latlearn.Init()
 
-    // We do benchmarks here mainly because we'd like the LL.no-op min metric
+    // We do this next step because we'd like the LL.no-op min metric
     // to be populated (and with a reasonable value to use), so that we can take
     // advantage of the "subtract_overhead" feature later on, during report gen.
-    latlearn.Benchmarks()
+    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of LL.no-op
 
     engine_loop( false) // WITHOUT enablement of dynamic adjustments to maintain QoS
     engine_loop( true)  // WITH it

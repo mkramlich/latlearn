@@ -1,5 +1,5 @@
 // latlearn/example-app1.go
-//     project: https://github.com/mkramlich/latlearn
+//     project: https://github.com/mkramlich/LatLearn
 
 package main
 
@@ -48,7 +48,11 @@ func fn4( a int, b int) {
     ll.A()
 }
 
+// NOTE: On a slower Mac laptop, this main() takes over 1 minute to finish,
+// normally. Most of the running time is caused by calling latlearn.Benchmarks.
 func main() {
+    fmt.Printf( "example-app1\n")
+
     // For all the following, we assume latlearn.go is a local file. In your compile path & brought into your own module's namespace. You can look in ./buildrun.sh to see this example app's buildtime and runtime assumptions.
 
     latlearn.Init2( []string { "print-yo", "fn1", "fn2"}) // spans of yours it should expect. in report order
@@ -72,7 +76,8 @@ func main() {
     // If you look at the report you'll see a lot of ??? for some LL benchmark spans
     // because they were not performed. They are purely optional.
 
-    // If you wish to perform them do this:
+    // If you wish to perform them call Benchmarks:
+    log.Printf( "about to call latlearn.Benchmarks. can take over 1 min on slower Mac\n")
     latlearn.Benchmarks()
 
     // Now let's write a new report. but let us put it in a different file
@@ -86,7 +91,7 @@ func main() {
     // By the way, latlearn also measures the latency of its own report generation. It names that span "LL.lat-report"
 
     // Let's do some more measurements
-    for i := 0; i < 100234; i++ {
+    for i := 0; i < 100_234; i++ {
         fn2()
     }
 
@@ -96,7 +101,7 @@ func main() {
     latlearn.Report2( params)
 
     // In this report you'll see metrics for fn2 reported for the first time.
-    // Note that fn2's AVG latency is (almost certaily) smaller (faster) than fn1. That is because its code body is similar, except it lacks any Printf call. Typically, turning off any output writes (esp to log files) yields a significant reduction in latency (on a typical machine, ayway.) Though in this case fn2 contributes to much more of the program's overall total run latency, measured from process start to end. Because, unlike fn1, it was called 100,234 times.
+    // Note that fn2's AVG latency is (almost certainly) smaller (faster) than fn1. That is because its code body is similar, except it lacks any Printf call. Typically, turning off any output writes (esp to log files) yields a significant reduction in latency (on a typical machine, ayway.) Though in this case fn2 contributes to much more of the program's overall total run latency, measured from process start to end. Because, unlike fn1, it was called 100,234 times.
 
     for i := 0; i < 2; i++ {
         ll = latlearn.B(  "totally-adhoc") // this was not in the initial set of tracked_spans
@@ -127,17 +132,18 @@ func main() {
     latlearn.Report_fpath = "latlearn-report6.txt"
     latlearn.Should_report_builtins   = true
     latlearn.Should_subtract_overhead = true // this is false by default
+    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of LL.no-op
     latlearn.Report() // in report notice that all the previous reported metrics shrunk
     // Except... for LL.no-op's min. That is the only span and field we EXEMPT from this overhead compensation feature. We exempt it so that it's original value passes thru into the generated report. So you know by *how* much the other reported numbers have shrunk!
 
-    fn3(     1)
-    fn3(    50)
-    fn3( 20000)
-    fn4(    1,   1)
-    fn4(    1, 100)
-    fn4(   10,  20)
+    fn3(                 1)
+    fn3(                50)
+    fn3(            20_000)
+    fn4(         1,      1)
+    fn4(         1,    100)
+    fn4(        10,     20)
     for i := 0; i < 100; i++ {
-        fn4( 1000,  15)
+        fn4( 1_000,     15)
     }
     // in report we gen here, notice added stats for all fn3 & fn4 param variants, tracked separately:
     latlearn.Report_fpath = "latlearn-report7.txt"
