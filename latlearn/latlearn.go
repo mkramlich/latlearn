@@ -2,7 +2,7 @@
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 October 24
+//     last rev 2023 October 25
 //
 //     contact: groglogic@gmail.com
 //     project: https://github.com/mkramlich/LatLearn
@@ -74,8 +74,8 @@ type ReplyMsg struct {
     Weight              int
 }
 
-type comm_msg struct { // TODO maybe draw from a sync.Pool of comm_msg instances
-    ttype         string   // values: "B", "B2", "A", "values", "report", "stop"
+type comm_msg struct {
+    ttype         string   // values: "A", "values", "benchmarks", "report", "stop"
     params        []string // generic yet app-specific, like for report gen
 
     // next 4 fields are "value-passed" (or immutable) vars,
@@ -106,8 +106,8 @@ type SpanSampleUnderwayI interface {
 }
 
 // NOTE: Apps can change the queue capacity dims, but will ONLY take effect if set BEFORE Init called
-var Outer_queue_capacity      int = 1_000_000 // TODO pick the queue sizes better
-var Inner_queue_capacity      int = 50        // TODO ditto
+var Outer_queue_capacity      int = 1_000_000
+var Inner_queue_capacity      int = 50
 
 var comm_outer                chan comm_msg = nil // singleton per proc; consumed by 'serve' fn
 var comm_inner                chan comm_msg = nil // singleton per proc; consumed by 'serve' fn
@@ -168,7 +168,6 @@ func variant_latency_learner( span string) (vll *variantLatencyLearner, found bo
     return vll, found
 }
 
-// TODO promote this fn to become part of the exported API?
 func span_key_form( name string, variant string) (key string) {
     if (variant != "") {
         // example: given span name of "somefn" and variant "N=200" then key is "somefn(N=200)"
@@ -297,11 +296,11 @@ func handle_comm_msg( msg comm_msg) (stop bool) {
     //log.Printf("latlearn.handle_comm_msg\n")
 
     switch   msg.ttype {
-        case "A" :     _ = handle_msg_A(          msg) // TODO maybe add a new A-like msg for 2+ (many) stats in 1 shot (to reduce pressure/contention on the 2 comm queues, since each has fixed capacity)
+        case "A" :     _ = handle_msg_A(          msg)
         case "values":     handle_msg_values(     msg)
         case "benchmarks": handle_msg_benchmarks( msg)
         case "report":     handle_msg_report(     msg)
-        case "stop":       return true // TODO consider chan close()
+        case "stop":       return true
     }
     return false
 }
@@ -521,8 +520,6 @@ func Latency_measure_self_sample( n int) (ok bool) {
     }
     Overhead_samples_finished = true
 
-    // TODO instead push a "bulk A" type of msg, so like 1M samples of LL.no-op will only occupy 1 msg slot in the comm_outer queue
-
     return true
 }
 
@@ -556,7 +553,7 @@ func benchmark_exec( name_sub string, exe string, args []string) { // name_sub l
         span   := fmt.Sprintf( "LL.exec-command(%s)", name_sub)
         ll     := ssu_before( span, "")
         if err := cmd.Run(); (err != nil) {
-            // TODO call variant of ll.A() method with arg to indicate it failed
+            // TODO call variant of after method (and/or with arg) to indicate it failed
         }
         ll.after_and_update()
     }
@@ -1079,7 +1076,7 @@ func Stop() (ok bool) {
 
     if !init_completed { return false}
 
-    comm_outer <- comm_msg{ ttype: "stop"} // TODO consider calling close on chan, somewhere
+    comm_outer <- comm_msg{ ttype: "stop"}
 
     return true
 }
