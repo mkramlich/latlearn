@@ -5,6 +5,7 @@ package main
 
 import (
     "fmt"
+    "log"
     "math/rand"
     "time"
 
@@ -40,7 +41,7 @@ func should_do_optional_tasks( span string) bool {
 
 func engine_loop( dyn_adjust bool) {
     ll_variant := fmt.Sprintf( "dyn_adjust=%v", dyn_adjust)
-    fmt.Printf( "engine_loop: %s\n", ll_variant)
+    log.Printf( "engine_loop: %s\n", ll_variant)
 
     for  i := 0; i < 40; i++ {
         ll := latlearn.B2( "loop", ll_variant)
@@ -48,10 +49,10 @@ func engine_loop( dyn_adjust bool) {
         needed_tasks()
 
         if (!dyn_adjust || (dyn_adjust && should_do_optional_tasks( ll.Name))) {
-            fmt.Printf("%2d: WILL do optional_tasks\n", i)
+            log.Printf("%2d: WILL do optional_tasks\n", i)
             optional_tasks()
         } else {
-            fmt.Printf("%2d: will NOT do optional_tasks\n", i)
+            log.Printf("%2d: will NOT do optional_tasks\n", i)
         }
 
         ll.A()
@@ -59,7 +60,7 @@ func engine_loop( dyn_adjust bool) {
 }
 
 func main() {
-    fmt.Printf( "example-app2\n")
+    log.Printf( "example-app2\n")
     // Here we'll show off how latlearn can be used by a program to implement
     // dynamic adjustment of execution strategies -- while running "in prod"
     // -- in order to maintain some ideal QoS goal, or business requirement.
