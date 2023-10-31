@@ -5,6 +5,7 @@ package main
 
 import (
     "fmt"
+    "log"
 
     "./latlearn"
 )
@@ -12,7 +13,7 @@ import (
 func fn1() {
     span :=      "fn1"
     ll   := latlearn.B( span)
-    fmt.Printf(  "%s\n", span)
+    log.Printf(  "%s\n", span)
     ll.A()
 }
 
@@ -51,14 +52,14 @@ func fn4( a int, b int) {
 // NOTE: On a slower Mac laptop, this main() takes over 1 minute to finish,
 // normally. Most of the running time is caused by calling latlearn.Benchmarks.
 func main() {
-    fmt.Printf( "example-app1\n")
+    log.Printf( "example-app1\n")
 
     // For all the following, we assume latlearn.go is a local file. In your compile path & brought into your own module's namespace. You can look in ./buildrun.sh to see this example app's buildtime and runtime assumptions.
 
     latlearn.Init2( []string { "print-yo", "fn1", "fn2"}) // spans of yours it should expect. in report order
 
     ll := latlearn.B(  "print-yo")
-    fmt.Printf( "yo\n")
+    log.Printf( "yo\n")
     ll.A()
 
     fn1()
