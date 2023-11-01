@@ -2,7 +2,7 @@
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 October 25
+//     last rev 2023 November 1
 //
 //     contact: groglogic@gmail.com
 //     project: https://github.com/mkramlich/LatLearn
@@ -59,7 +59,8 @@ type variantLatencyLearner struct {
 type SpanSampleUnderway struct {
     Name    string    // a function of both Name & Variant fields form the key into learners map
     Variant string
-    t1, t2  time.Time // NOTE there is no (need for a) t2 field
+    t1, t2  time.Time
+    Ended   bool      // we rely on this defaulting to false
 }
 
 type ReplyMsg struct {
@@ -102,7 +103,8 @@ type SpanSampleUnderwayI interface {
     after()
     after_and_submit()
 
-    A() (ok bool)
+    A()        (ok bool)
+    A2(string) (ok bool)
 }
 
 // NOTE: Apps can change the queue capacity dims, but will ONLY take effect if set BEFORE Init called
@@ -115,6 +117,9 @@ var comm_inner                chan comm_msg = nil // singleton per proc; consume
 var init_oncer                sync.Once
 var init_time                 time.Time
 var init_completed            bool = false // to be explicit. we rely on this starting false
+
+var Serve_started             bool = false // to be explicit. we rely on these starting false
+var Serve_finished            bool = false // ditto
 
  // this structure (along with the singleton serve() goroutine) form the "heart" of LatLearn:
 var learners                  map[string]latencyLearnerI
@@ -307,6 +312,9 @@ func handle_comm_msg( msg comm_msg) (stop bool) {
 
 // for internal, latlearn-only, use
 func serve() {
+    Serve_started = true
+    defer func() { Serve_finished = true}()
+
     log.Printf( "latlearn.serve\n")
 
     for {
@@ -488,6 +496,23 @@ func (ssu *SpanSampleUnderway) after_and_submit( comm chan comm_msg) (ok bool) {
 }
 
 func (ssu *SpanSampleUnderway) A() (ok bool) {
+    if ssu.Ended { return false}
+    ssu.Ended = true
+
+    return ssu.after_and_submit( comm_outer)
+}
+
+// to identify a span which has ended in an alternate (non-default/typical) way
+func (ssu *SpanSampleUnderway) A2( variant string) (ok bool) {
+    //log.Printf( "latlearn/SSU.A2: variant %s\n", variant)
+
+    if ssu.Ended { return false}
+    ssu.Ended = true
+
+    if (ssu.Variant != "")  && (variant != "") {
+        ssu.Variant += ","
+    }
+    ssu.Variant     += variant
     return ssu.after_and_submit( comm_outer)
 }
 

@@ -37,9 +37,56 @@ Latlearn is distributed only as open source, 100%. You can see every line of cod
 
 There are no opaque binaries or external service dependencies. There is no "phoning home" to The Cloud. Your data and metrics do not go anywhere else. They exist only inside the process of your app's runtime -- ephemerally -- and, at most, in whatever static report files you choose to generate. This gives you full control. And the report files are plain text, therefore are friendly for version control. Yet *structured* enough to help with further "value-add" processing downstream, in-house, if desired.
 
-The combination of Total Transparency, Zero Dependencies, and Zero Price may be attractive for some devs or teams looking for an alternative to big/heavy/murky commercial packages or cloud services in this problem space. I won't name names but if I coughed and my cough sounded to you like "AtaOgd" or "Ew Relicked" or "Plunks" I'd say you were *fantastically* good at spelling the sounds of a cough! And then I would look at you funny, and slowly back away, all casual like.
+The combination of No Dependencies, Total Transparency and Zero Price may be attractive for some devs or teams looking for an alternative to big/heavy/murky commercial packages or cloud services in this problem space. I won't name names but if I coughed and my cough sounded to you like "AtaOgd" or "Ew Relicked" or "Plunks" I'd say you were *fantastically* good at spelling the sounds of a cough! And then I would look at you funny, and slowly back away, all casual like.
 
-Concurrency & Thread/Memory Safety
+Span Variants
+
+Every programmer knows that "at runtime, it's the Wild West!" Meaning that *many* possible variants on the code flow path can play out, at runtime, and especially in prod. ("Hey, it worked on my box!") And the more of these variant permutations there are, the greater the total complexity, and the harder it will be for a programmer to reason about the code, and support it, long term.
+
+Therefore LatLearn is designed to support both the notion of a "default" path for a span, as well as any number of *variants* upon it. And every variant will be considered to be part of the same "family" of spans, all sharing the same root name, in its report on metrics.
+
+In the simplest case (when you just call B() and then A()) there is NO variant. It assumes that the code path between the two was the normal and default path, and therefore its outcome or results were also normal and the default. In that use case, the span is standalone, and not part of any family.
+
+But by using the B2() function, an app can indicate that a variant on the span has just begun -- perhaps one which varies by some set of one or more parameters, or environmental conditions. And by calling A2() you can indicate also, if you wish, that an alternate ending, or outcome, has happened. The most common examples in practice of "end variants" are situations like an "early return" (perhaps carried out by a condition guard block), or, a triggered (or handled, or propagated untouched) panic.
+
+You get to provide a string name for these variants, for both the B2 function (which marks when a span variant begins) and the A2 function (which marks when a span variant ends.) Metrics for these variants are reported as distinct entries in reports -- in their own rows -- but their underlying data is also shared by (and counted towards) the metrics for their family's single common "parent" span -- which is also listed as its own row in the report.
+
+Variant names are a string. They are fairly free-form and their exact syntax is up to the application and their preferences. Only a few rules or patterns are enforced. First, that if both a B2() variant name was passed, and, an A2() variant name was passed, then they get combined into a single variant name string, separated by a comma, like: "my-B2-variant,my-A2-variant". Also, for purposes of reports (and for LatLearn's internal storage and lookups) it forms a compound key using a certain format rule. If a span has NO variants, or, is the parent of a family of variants, then it's key is just it's bare name. So span "foo" is also "foo" in the reports, and how it is looked-up under the hood. But to form a variant's full name (for purposes of key lookup, and reports, only), it *combines* them, in this format:
+    span-base-name(variant-name)
+
+To illustrate a little better:
+    "B-param"
+or:
+    "B2-param1(B2-param2,A2-param1)"
+
+Which could result in these examples of (totally arbitrary but) real world span names:
+    "fn"
+    "yourpkg/main/fn2"
+    "twiddle_bits"
+    "process-reports"
+    "process-reports(N=100,R=3)"
+    "process-reports(N=100,R=3,earlyreturn=due-to-foo-nil)"
+    "whatever(goroutines=4,logging=off)
+    "do-task7(panicked,err=errtype,origin=X)
+    "go-work(timeout=100s,cancelled=45s)
+
+Making span variants a first class feature of LatLearn means that you can more easily tell why a particular metric looks much bigger (or much smaller!) than expected. Did some cases have lower latency because a function did an early return? Did some cases have a higher latency because the function parameters passed gave an argument (eg. some "n int") that caused the function body to perform more total compute work (or, simply spent more time waiting/asleep) than otherwise? And by *breaking* these cases out, explicitly, in our data set, it helps to refine the value of the "signal" you get from the reports, and from running your own benchmarks, or when doing your own regression testing, or tuning sprints. Indeed, *any* perf-relevant parameters, environmental conditions, or runtime edge cases can be syntactically "noted" (esp via dynamic iterpolation using string templates), easily, in LatLearn's instrumentation. And then the fact of their occurence gets to "pass through" into the reports, and be visible explicitly in the metric rows and their names, and how they are grouped there.
+
+Span variants -- and our instrumentation's support for them -- are a phenomenon which are arguably a signature strength of LatLearn: a credible argument for *why* it might be worth adding to one's Golang development toolbox. Because it is how LatLearn can *differentiate* itself both from what Golang provides out-of-the-box, plus, differeentiate itself from more traditional, external and "hands off" profilers. Instrumenting with LatLearn allows you to profile your code in a way where the "profiler" in question (LatLearn) truly takes advantage both of Golang's language capabilities *and* the entire standard library, but *also* the fact that it gets instrumented by hand -- by an app's creator (or maintainer) -- and therefore is someone who has the knowledge of which *app-specific* factors & metadata to "bake-in" to the captured sample metrics. Thus, while it can take a little more work, upfront, to profile code with it, the trade-off's "win" is to get potentially much more value, in the long run, due to getting more *actionable* signal, and enabling finer-grained deductions. It has provided that for the author, anyway, so far.
+
+Defers, Panics & Panic Recovery
+
+LatLearn plays well with them, and in the ways you probably would expect.
+
+For a concrete demonstration see [./example-app4.go](./example-app4.go).
+
+By the way, the example code above also shows how LatLearn behaves in the case when pair-matching "end-of-span" calls fail to be made (the A()s or A2()s), for whatever reason, or, are made but *redundantly*. Hint: it does the *right* thing -- by silently ignoring them, and with no stat distortions, leaks or hangs.
+
+Contexts
+
+LatLearn has been designed to play well with Golang contexts. For concrete demos (including how it might interact with cancelled (and possibly deeply inherited/derived) contexts, deadlines, timeouts and "WithValue" per-context state) see [./example-app5.go](./example-app5.go)
+
+Concurrency, Goroutines & Thread/Memory Safety
 
 LatLearn is safe for use by processes running multiple goroutines, each with code paths instrumented via LatLearn. See [./latlearn/latlearn.go](./latlearn/latlearn.go) and [./example-app3.go](./example-app3.go) for more detail on exactly how and why.
 
@@ -47,25 +94,37 @@ Real Use Cases
 
 Here's a brief write-up of a real use case where LatLearn's instrumentation and reporting  was used to help identify an inefficient code path, and then to confirm that a performance refactor was a success: [./benefits-example.md](./benefits-example.md)
 
-The Full Story
+Example App Code, in Action
 
-For more complex examples, features and permutations see these example apps below, and use [./buildrun.sh](./buildrun.sh) to build and run them:
+To see many concrete demonstrations of LatLearn's features and supported use case permutations see the full set of example apps below (all of which are included in this repo):
 
 * [./example-app1.go](./example-app1.go)
 * [./example-app2.go](./example-app2.go)
 * [./example-app3.go](./example-app3.go)
+* [./example-app4.go](./example-app4.go)
+* [./example-app5.go](./example-app5.go)
 
-Extracted from it's author's "slartboz.go" file, originally, on 2023 Sep 10, from the private/closed-source Slartboz game's source tree. It was homegrown there in order to meet that game's early goals/needs for:
+To build and run them: [./buildrun.sh](./buildrun.sh)
+
+Reports
+
+To help understand what LatLearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at [./report-examples/latlearn-report.txt](./report-examples/latlearn-report.txt). But it is also recommended that you run [./buildrun.sh](./buildrun.sh) and poke around.
+
+Caveats
+
+The LatLearn code is NOT intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
+
+There is MUCH more to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's a long list of in-house ideas for further enhancement.
+
+Project Origin
+
+By the way, the original version of LatLearn started life when it was extracted from it's author's "slartboz.go" file, on LatLearn's "birth day" of 2023 Sep 10. A file from his Slartboz game's private/closed Golang app source tree. It was homegrown there in order to meet that game's early goals/needs for:
 
 * in-game UX monitoring & dynamic adjustment of task strategies, to maintain QoS
 * benchmark regression tests (for basic QA automation & CI/CD pipelines)
 * engine performance tuning & optimization refactors
 
-To help understand what LatLearn can do, there is a (very simple) sample of a latency report file included in this repo. It is at [./report-examples/latlearn-report.txt](./report-examples/latlearn-report.txt). But it is also recommended that you run [./buildrun.sh](./buildrun.sh) and poke around.
-
-The LatLearn code is NOT intended to meet everyone's needs. It scratched an itch, in-house. And it has the benefit of being well-understood by its creator, with no surprises. And it is easy to enhance or augment where desired.
-
-There is MUCH more to come! There is more LL-related code to extract from Slartboz (and clean up, of course.) And there's a long list of in-house ideas for further enhancement.
+And where it remains linked into and useful there, still today.
 
 Consulting
 
@@ -92,5 +151,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2023 October 25
+2023 November 1
 
