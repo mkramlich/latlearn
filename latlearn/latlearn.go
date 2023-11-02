@@ -482,7 +482,7 @@ func (ssu *SpanSampleUnderway) after_and_update() (ok bool) {
 
 // for latlearn-internal use only
 func (ssu *SpanSampleUnderway) after_and_submit( comm chan comm_msg) (ok bool) {
-    if !init_completed { return false}
+    if (!init_completed || Serve_finished) { return false}
 
     ssu.after()
 
@@ -1029,7 +1029,7 @@ func report_inner( params []string) (ok bool) {
 func Report() (ok bool) {
     //log.Printf( "latlearn.Report\n")
 
-    if !init_completed { return false}
+    if (!init_completed || Serve_finished) { return false}
 
     done_chan  := make( chan bool, 1)
     comm_outer <- comm_msg{ ttype: "report", done:done_chan}
@@ -1040,7 +1040,7 @@ func Report() (ok bool) {
 func Report2( params []string) (ok bool) {
     //log.Printf( "latlearn.Report2\n")
 
-    if !init_completed { return false}
+    if (!init_completed || Serve_finished) { return false}
 
     done_chan  := make( chan bool, 1)
     comm_outer <- comm_msg{ ttype: "report", params:params, done:done_chan}
@@ -1051,7 +1051,7 @@ func Report2( params []string) (ok bool) {
 func Benchmarks() (ok bool) {
     //log.Printf( "latlearn.Benchmarks\n")
 
-    if !init_completed { return false}
+    if (!init_completed || Serve_finished) { return false}
 
     done_chan  := make( chan bool, 1)
     comm_outer <- comm_msg{ ttype: "benchmarks", done:done_chan}
@@ -1063,7 +1063,7 @@ func Values( span string) (values ReplyMsg, ok bool) {
     //.pre :=      "latlearn.Values"
     //log.Printf( "%s:\n", pre)
 
-    if !init_completed { return ReplyMsg{}, false}
+    if (!init_completed || Serve_finished) { return ReplyMsg{}, false}
 
     reply_chan := make( chan ReplyMsg, 1)
 
@@ -1099,7 +1099,7 @@ func Overhead() (overhead ReplyMsg, ok bool) {
 func Stop() (ok bool) {
     log.Printf( "latlearn.Stop\n")
 
-    if !init_completed { return false}
+    if (!init_completed || Serve_finished) { return false}
 
     comm_outer <- comm_msg{ ttype: "stop"}
 
