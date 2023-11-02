@@ -53,7 +53,7 @@ func main() {
     latlearn.Should_report_builtins   = true
     latlearn.Should_subtract_overhead = true
 
-    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of LL.no-op
+    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of OVERHEAD_SPAN
 
     ll := latlearn.B( "log-foo")
     log.Printf(       "%s: foo\n", pre)

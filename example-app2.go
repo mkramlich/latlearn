@@ -72,10 +72,10 @@ func main() {
     // We call init here so its latency cost not incurred while inside engine_loop.
     latlearn.Init()
 
-    // We do this next step because we'd like the LL.no-op min metric
+    // We do this next step because we'd like the OVERHEAD_SPAN min metric
     // to be populated (and with a reasonable value to use), so that we can take
     // advantage of the "subtract_overhead" feature later on, during report gen.
-    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of LL.no-op
+    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of OVERHEAD_SPAN
 
     engine_loop( false) // WITHOUT enablement of dynamic adjustments to maintain QoS
     engine_loop( true)  // WITH it

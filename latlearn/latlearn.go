@@ -139,6 +139,8 @@ var Overhead_samples_aborted  bool = false
 var Benchmarks_started        bool = false
 var Benchmarks_finished       bool = false
 
+const OVERHEAD_SPAN = "LL.no-op"
+
 
 func ( ll *latencyLearner)        getLL()  *latencyLearner        { return  ll}
 func ( ll *latencyLearner)        getVLL() *variantLatencyLearner { return nil}
@@ -345,7 +347,7 @@ func init_inner( spans_app []string) (already bool) { // span list should be for
     // latlearn's built-in benchmark spans
     //     for purposes of comparison with the enduser's reported span metrics
     spans_latlearn_builtin := []string {
-        "LL.no-op",                       "LL.fn-call-return",
+        OVERHEAD_SPAN,                    "LL.fn-call-return",
         "LL.for-iters(n=1000)",           "LL.accum-ints(n=1000)",    "LL.add-int-literals(n=2)",
         "LL.add-str-literals(n=2)",       "LL.map-str-int-set",
         "LL.map-str-int-get(k=100,key0)", "LL.map-str-int-get(k=100,key49)",
@@ -522,7 +524,7 @@ func Latency_measure_self_sample( n int) (ok bool) {
     //
     // For "best" results, try to call this fn under "normal" runtime conditions
     // for your app. Also, note that the larger the "n" param (the larger the
-    // total number of "LL-no-op" samples we collect, overall), the more
+    // total number of OVERHEAD_SPAN samples we collect, overall), the more
     // "accurate" and helpful your deductions about its meaning will be.
 
     if (n < 0) { n = 1_000_000} // we'll do it 1 million times, hoping to mitigate (somewhat, maybe) the effects of host load spikes, GC runs, etc
@@ -531,7 +533,7 @@ func Latency_measure_self_sample( n int) (ok bool) {
     Overhead_samples_finished = false
     Overhead_samples_aborted  = false
     for i := 0; i < n; i++ {
-        ssu   := ssu_before( "LL.no-op", "")
+        ssu   := ssu_before( OVERHEAD_SPAN, "")
         // ... some app-specific code (of latency measurement interest) would normally be here ...
         if ok := ssu.A(); !ok {
             Overhead_samples_finished = true
@@ -548,7 +550,7 @@ func Latency_measure_self_sample( n int) (ok bool) {
 func measure_overhead_estimate() (overhead time.Duration, exists bool) {
     if !init_completed              { return -1, false}
 
-    lli, found := learners[ "LL.no-op"]
+    lli, found := learners[ OVERHEAD_SPAN]
 
     if  !found                      { return -1, false}
 
@@ -655,7 +657,7 @@ func benchmarks_inner() (performed bool) {
 
     for i    := 0; i < 1000; i++ {
         ll   := ssu_before( "LL.span-map-lookup","")
-        a, b := learners[ "LL.no-op"]
+        a, b := learners[ OVERHEAD_SPAN] // TODO ideally use diff span (one guaranteed to always be in the learners map), in case we never sampled for OVERHEAD_SPAN
         ll.after_and_update()
         _     = a // yes, is reason why we are doing this
         _     = b // ditto
@@ -785,7 +787,7 @@ func number_grouped( val int64, sep string) string { // sep value like "," or " 
 func overhead_comp( metric_in int64, overhead int64) (metric_out int64) { // "comp" means compensate
     if Should_subtract_overhead {
         metric_out = (metric_in - overhead)
-        if (metric_out < 0) { metric_out = 0} // We apply this minimum cap on metric_out because its possible for our "best" discovered LL.no-op min field value (in a particular process session) to not reflect the absolute truest minimum value possible during that run. In those (rare) edge cases, if we did NOT apply this adjustment, the reported latency could appear as a (usually small) negative number of ns. Since that is obviously nonsense (ie. impossible, in reality), we "patch" it here to ensure the reported value is never *less* than 0 ns. In other words, our premise/bias is that *almost* everything takes *some* time, and that any negative "measured" latency can be due *only* to either a bug or a calculation quirk, caused by bad math or imperfect/incomplete effort at evidence gathering.
+        if (metric_out < 0) { metric_out = 0} // We apply this minimum cap on metric_out because its possible for our "best" discovered OVERHEAD_SPAN's min field value (in a particular process session) to not reflect the absolute truest minimum value possible during that run. In those (rare) edge cases, if we did NOT apply this adjustment, the reported latency could appear as a (usually small) negative number of ns. Since that is obviously nonsense (ie. impossible, in reality), we "patch" it here to ensure the reported value is never *less* than 0 ns. In other words, our premise/bias is that *almost* everything takes *some* time, and that any negative "measured" latency can be due *only* to either a bug or a calculation quirk, caused by bad math or imperfect/incomplete effort at evidence gathering.
     } else {
         metric_out =  metric_in
     }
@@ -798,7 +800,7 @@ func (ll *latencyLearner) report( f *os.File, name_field string, since_init time
 
     if ll.Pair_ever_completed {
         min              := int64( ll.Min)
-        if (overhead != -1) && (ll.Name != "LL.no-op") {
+        if (overhead != -1) && (ll.Name != OVERHEAD_SPAN) {
             min           = overhead_comp( int64( ll.Min),  int64( overhead))
         }
         min_txt          := fmt.Sprintf( "%15s", number_grouped( int64( min), ","))
@@ -922,7 +924,7 @@ func report_inner( params []string) (ok bool) {
 
     io.WriteString( f, fmt.Sprintf( "Should_subtract_overhead:    %v\n", Should_subtract_overhead))
     if Should_subtract_overhead {
-        io.WriteString( f,          "metric treated as overhead:  LL.no-op, min\n")
+        io.WriteString( f, fmt.Sprintf("metric treated as overhead:  %s, min\n", OVERHEAD_SPAN))
     }
 
     t2         := time.Now()         // time.Time
@@ -1086,10 +1088,10 @@ func Overhead() (overhead ReplyMsg, ok bool) {
     //
     // It might also be valuable for the app to confirm Overhead_samples_finished
     // is true. And that Overhead_samples_aborted is false. By default we try to
-    // capture 1M samples of LL.no-op span. These two flags ensure that all 1M
+    // capture 1M samples of OVERHEAD_SPAN. These two flags ensure that all 1M
     // samples were carried out and finished, without error.
 
-    return Values( "LL.no-op")
+    return Values( OVERHEAD_SPAN)
 }
 
 func Stop() (ok bool) {

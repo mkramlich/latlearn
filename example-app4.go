@@ -110,9 +110,9 @@ func main() {
 
     latlearn.Report_fpath             = "latlearn-report-app4.txt"
     latlearn.Should_report_builtins   = false
-    latlearn.Should_subtract_overhead = true // default for this is to use the min field of LL.no-op
+    latlearn.Should_subtract_overhead = true // default for this is to use the min field of OVERHEAD_SPAN
 
-    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of LL.no-op
+    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of OVERHEAD_SPAN
 
     panicked := false
     defer panic_handler_for_main( &panicked)

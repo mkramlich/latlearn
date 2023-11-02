@@ -118,7 +118,7 @@ func main() {
 
     // Now let's make a report where lastlearn will try to subtract the measuring cost
     // from all reported span metrics. It is only a "good faith" effort. An estimate or
-    // guess. For this purpose it uses the metrics for the built-in "LL.no-op" and uses
+    // guess. For this purpose it uses the metrics for the built-in OVERHEAD_SPAN and uses
     // it's currwnt "min" value for latency. An observed minimum is a good faith attempt
     // to try to determine the true, inescapable latency cost of any task (at least on
     // the current hardware, and under ideal conditions) but there are too many other
@@ -133,9 +133,9 @@ func main() {
     latlearn.Report_fpath = "latlearn-report6.txt"
     latlearn.Should_report_builtins   = true
     latlearn.Should_subtract_overhead = true // this is false by default
-    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of LL.no-op
+    latlearn.Latency_measure_self_sample(-1) // default attempts capture of 1M samples of OVERHEAD_SPAN
     latlearn.Report() // in report notice that all the previous reported metrics shrunk
-    // Except... for LL.no-op's min. That is the only span and field we EXEMPT from this overhead compensation feature. We exempt it so that it's original value passes thru into the generated report. So you know by *how* much the other reported numbers have shrunk!
+    // Except... for OVERHEAD_SPAN's min. That is the only span and field we EXEMPT from this overhead compensation feature. We exempt it so that it's original value passes thru into the generated report. So you know by *how* much the other reported numbers have shrunk!
 
     fn3(                 1)
     fn3(                50)
