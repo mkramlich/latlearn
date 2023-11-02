@@ -2,7 +2,7 @@
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 November 1
+//     last rev 2023 November 2
 //
 //     contact: groglogic@gmail.com
 //     project: https://github.com/mkramlich/LatLearn
@@ -396,7 +396,7 @@ func init_inner( spans_app []string) (already bool) { // span list should be for
     comm_inner     = make( chan comm_msg, Inner_queue_capacity)
 
     init_time      = time.Now()
-    init_completed = true
+    init_completed = true // TODO consider moving this line to after go serve()
 
     go serve() // <- in a sense, that thread becomes the "beating heart" of LatLearn
 
@@ -429,15 +429,11 @@ func ssu_before( name string, variant string) *SpanSampleUnderway {
 func B( name string) *SpanSampleUnderway {
     //log.Printf( "B: name %s\n", name)
 
-    if !init_completed { return nil} // TODO maybe add a separate "ok bool" return param
-
     return ssu_before( name, "")
 }
 
 func B2( name string, variant string) *SpanSampleUnderway {
     //log.Printf( "B2: name %s\n", name)
-
-    if !init_completed { return nil} // TODO maybe add a separate "ok bool" return param
 
     return ssu_before( name, variant)
 }
