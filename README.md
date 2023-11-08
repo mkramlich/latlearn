@@ -16,7 +16,7 @@ LatLearn also tracks the cost of its own measurements and reporting. And include
 
 The act of taking a measurement (and stuffing it somewhere) has a cost. In compute and therefore in latency. Though this codebase is young (and relatively NOT optimized, so far) we DO make an attempt to write reasonably efficient code. So as to impose the minimum "overhead" cost from the act of measuring itself. On an older, low-end Apple laptop (by the standards of 2023), the author has consistently seen an overhead cost of around 76 nanoseconds. Per application span (per completed pair of before() and after()) being measured. When using LatLearn. We make a best faith effort to devise a reasonable number for this. Currently, we use the "LL.no-op" span's metrics for it. And it's minimum observed value, in any given run session. Obviously the actual overhead cost, in time, will vary by your host hardware, etc.
 
-Since LatLearn makes an effort to deduce it's own measurement overhead cost it goes one step further to deliver an extra feature. Though it is purely optional. If you toggle the LatLearn variable named "Should_subtract_overhead" to true then in all subsequent reports it will automatically subtract out the believed overhead cost, from all the reported latencies (to be clear: for every span's min, last, max and mean.) It does exempt, however, ONE span and stat permutation. It exempts LL.no-op's "min" field value from this auto-compensation logic. The reason why is so we *always* let LL.no-op min's value pass through, unchanged, into the report. So you can better judge the impact it had, especially when automatic overhead subtraction is happening for all the other values shown. In your report, if LL.no-op's "last" value (or max) sometimes appears LOWER than it's "min" (thus, an apparent paradox) then that is why!
+Since LatLearn makes an effort to deduce it's own measurement overhead cost it goes one step further to deliver an extra feature. Though it is purely optional. If you toggle the LatLearn variable named ```Should_subtract_overhead``` to true then in all subsequent reports it will automatically subtract out the believed overhead cost, from all the reported latencies (to be clear: for every span's min, last, max and mean.) It does exempt, however, ONE span and stat permutation. It exempts LL.no-op's "min" field value from this auto-compensation logic. The reason why is so we *always* let LL.no-op min's value pass through, unchanged, into the report. So you can better judge the impact it had, especially when automatic overhead subtraction is happening for all the other values shown. In your report, if LL.no-op's "last" value (or max) sometimes appears LOWER than it's "min" (thus, an apparent paradox) then that is why!
 
 Simplest Example:
 ```
@@ -52,23 +52,29 @@ But by using the B2() function, an app can indicate that a variant on the span h
 You get to provide a string name for these variants, for both the B2 function (which marks when a span variant begins) and the A2 function (which marks when a span variant ends.) Metrics for these variants are reported as distinct entries in reports -- in their own rows -- but their underlying data is also shared by (and counted towards) the metrics for their family's single common "parent" span -- which is also listed as its own row in the report.
 
 Variant names are a string. They are fairly free-form and their exact syntax is up to the application and their preferences. Only a few rules or patterns are enforced. First, that if both a B2() variant name was passed, and, an A2() variant name was passed, then they get combined into a single variant name string, separated by a comma, like: "my-B2-variant,my-A2-variant". Also, for purposes of reports (and for LatLearn's internal storage and lookups) it forms a compound key using a certain format rule. If a span has NO variants, or, is the parent of a family of variants, then it's key is just it's bare name. So span "foo" is also "foo" in the reports, and how it is looked-up under the hood. But to form a variant's full name (for purposes of key lookup, and reports, only), it *combines* them, in this format:
-    span-base-name(variant-name)
+
+```    span-base-name(variant-name)```
 
 To illustrate a little better:
-    "B-param"
+
+```    "B-param"```
 or:
-    "B2-param1(B2-param2,A2-param1)"
+
+```    "B2-param1(B2-param2,A2-param1)"```
 
 Which could result in these examples of (totally arbitrary but) real world span names:
+
+```
     "fn"
     "yourpkg/main/fn2"
     "twiddle_bits"
     "process-reports"
     "process-reports(N=100,R=3)"
     "process-reports(N=100,R=3,earlyreturn=due-to-foo-nil)"
-    "whatever(goroutines=4,logging=off)
-    "do-task7(panicked,err=errtype,origin=X)
-    "go-work(timeout=100s,cancelled=45s)
+    "whatever(goroutines=4,logging=off)"
+    "do-task7(panicked,err=errtype,origin=X)"
+    "go-work(timeout=100s,cancelled=45s)"
+```
 
 Making span variants a first class feature of LatLearn means that you can more easily tell why a particular metric looks much bigger (or much smaller!) than expected. Did some cases have lower latency because a function did an early return? Did some cases have a higher latency because the function parameters passed gave an argument (eg. some "n int") that caused the function body to perform more total compute work (or, simply spent more time waiting/asleep) than otherwise? And by *breaking* these cases out, explicitly, in our data set, it helps to refine the value of the "signal" you get from the reports, and from running your own benchmarks, or when doing your own regression testing, or tuning sprints. Indeed, *any* perf-relevant parameters, environmental conditions, or runtime edge cases can be syntactically "noted" (esp via dynamic iterpolation using string templates), easily, in LatLearn's instrumentation. And then the fact of their occurence gets to "pass through" into the reports, and be visible explicitly in the metric rows and their names, and how they are grouped there.
 
@@ -151,5 +157,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2023 November 1
+2023 November 8
 
