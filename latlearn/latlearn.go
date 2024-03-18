@@ -2,7 +2,7 @@
 //     by Mike Kramlich
 //
 //     started  2023 September
-//     last rev 2023 November 2
+//     last rev 2024 September 15
 //
 //     contact: groglogic@gmail.com
 //     project: https://github.com/mkramlich/LatLearn
@@ -59,7 +59,7 @@ type variantLatencyLearner struct {
 type SpanSampleUnderway struct {
     Name    string    // a function of both Name & Variant fields form the key into learners map
     Variant string
-    t1, t2  time.Time
+    T1, T2  time.Time
     Ended   bool      // we rely on this defaulting to false
 }
 
@@ -419,7 +419,7 @@ func Init2( spans_app []string) { // span list should be for LLs (parent spans) 
 }
 
 func (ssu *SpanSampleUnderway) before() {
-    ssu.t1 = time.Now()
+    ssu.T1 = time.Now()
 }
 
 func ssu_before( name string, variant string) *SpanSampleUnderway {
@@ -466,7 +466,12 @@ func (ll *latencyLearner) after2( dur time.Duration) { // dur is int64. of ns. l
 
 // for latlearn-internal use only
 func (ssu *SpanSampleUnderway) after() {
-    ssu.t2 = time.Now()
+    // This IsZero guard is needed for certain tests
+    // (with synthetic/injected t2 values)
+    // and was NOT needed to support an app's normal use:
+    if ssu.T2.IsZero() { // TODO adding this guard adds latency to span LL.no-op. how much?
+        ssu.T2 = time.Now()
+    }
 }
 
 // like after_and_submit but does NOT use channels, just updates the LL in the map directly
@@ -475,7 +480,7 @@ func (ssu *SpanSampleUnderway) after_and_update() (ok bool) {
 
     ssu.after()
 
-    return handle_ssu_A( ssu.Name, ssu.Variant, ssu.t1, ssu.t2)
+    return handle_ssu_A( ssu.Name, ssu.Variant, ssu.T1, ssu.T2)
 }
 
 // for latlearn-internal use only
@@ -488,8 +493,8 @@ func (ssu *SpanSampleUnderway) after_and_submit( comm chan comm_msg) (ok bool) {
                 ttype:   "A",
                 name:    ssu.Name,
                 variant: ssu.Variant,
-                t1:      ssu.t1,
-                t2:      ssu.t2}
+                t1:      ssu.T1,
+                t2:      ssu.T2}
     return true
 }
 
