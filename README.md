@@ -1,7 +1,11 @@
 LatLearn (aka LL, LatencyLearner or latlearn.go)
     by Mike Kramlich
 
-https://github.com/mkramlich/LatLearn
+https://codeberg.org/grogsynlog42/LatLearn
+
+--------------------
+NOTE: On 2026 Jan 3 the author migrated LatLearn's master public repo to Codeberg. The old GitHub repo will be left up for a while but no further updates or released are planned there.
+--------------------
 
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
 
@@ -37,7 +41,7 @@ Latlearn is distributed only as open source, 100%. You can see every line of cod
 
 There are no opaque binaries or external service dependencies. There is no "phoning home" to The Cloud. Your data and metrics do not go anywhere else. They exist only inside the process of your app's runtime -- ephemerally -- and, at most, in whatever static report files you choose to generate. This gives you full control. And the report files are plain text, therefore are friendly for version control. Yet *structured* enough to help with further "value-add" processing downstream, in-house, if desired.
 
-The combination of No Dependencies, Total Transparency and Zero Price may be attractive for some devs or teams looking for an alternative to big/heavy/murky commercial packages or cloud services in this problem space. I won't name names but if I coughed and my cough sounded to you like "AtaOgd" or "Ew Relicked" or "Plunks" I'd say you were *fantastically* good at spelling the sounds of a cough! And then I would look at you funny, and slowly back away, all casual like.
+The combination of No Dependencies, Total Transparency and Zero Price may be attractive for some devs or teams looking for an alternative to big/heavy/murky commercial packages or cloud services in this problem space.
 
 Span Variants
 
@@ -157,5 +161,5 @@ To contact the author, email him at:
 thanks!
 
 Mike
-2024 September 15
+2026 Jan 3
 
