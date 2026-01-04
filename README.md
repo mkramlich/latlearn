@@ -4,7 +4,7 @@ LatLearn (aka LL, LatencyLearner or latlearn.go)
 https://codeberg.org/grogsynlog42/LatLearn
 
 --------------------
-NOTE: On 2026 Jan 3 the author migrated LatLearn's master public repo to Codeberg. The old GitHub repo will be left up for a while but no further updates or released are planned there.
+NOTE: On 2026 Jan 3 the author migrated LatLearn's master public repo to Codeberg. The old GitHub repo will be left up for a while but no further updates or releases are planned there.
 --------------------
 
 This is a simple instrumentation API and library for Golang software. For measuring and reporting the latency performance of code. Across arbitrary spans. Spans that you name with simple strings.
